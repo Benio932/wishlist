@@ -1,8 +1,8 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Bengt’s Wish List</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Roboto&display=swap" rel="stylesheet" />
@@ -11,8 +11,8 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <style>
-  /* RESET */
-  * {
+  /* Reset & Basics */
+  *, *::before, *::after {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
   }
@@ -26,21 +26,29 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  /* HEADER */
+  a {
+    color: #ffd700cc;
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+
+  /* Header */
   header {
     position: sticky;
     top: 0;
-    background-color: rgba(0,0,0,0.9);
+    background: rgba(0,0,0,0.95);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
-    z-index: 1000;
+    padding: 1rem 1rem 0.8rem;
+    z-index: 1100;
   }
   .title {
     font-family: 'Playfair Display', serif;
-    font-size: 1.75rem;
-    background: linear-gradient(90deg, #ffd700 25%, #fff4b2 50%, #ffd700 75%);
+    font-size: 1.7rem;
+    background: linear-gradient(270deg, #ffd700, #fff4b2, #ffd700);
     background-size: 200% 100%;
     background-clip: text;
     -webkit-background-clip: text;
@@ -56,142 +64,150 @@
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-3px); }
   }
-  /* BUTTONS */
+
+  /* Buttons */
   .control-buttons {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.6rem;
   }
-  .action-button {
+  button.action-button {
     background: #1f1f1f;
     color: #ffd700;
     border: 1.5px solid #ffd700;
-    padding: 0.5rem 1.2rem;
+    padding: 0.45rem 1.2rem;
     border-radius: 12px;
-    cursor: pointer;
-    font-size: 1rem;
     font-weight: 600;
-    box-shadow: 0 0 4px transparent;
+    font-size: 1rem;
+    cursor: pointer;
     transition: all 0.3s ease;
     user-select: none;
   }
-  .action-button:hover {
+  button.action-button:hover, button.action-button:focus {
     background: #ffd700;
     color: #000;
     box-shadow: 0 0 12px #ffd700;
+    outline: none;
   }
-  .action-button:active {
-    transform: scale(0.97);
-  }
-  /* TABS */
+
+  /* Tabs for categories */
   .tabs {
     display: flex;
     overflow-x: auto;
     background: #111;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.25rem;
     user-select: none;
+    border-bottom: 1px solid #333;
   }
   .tab {
-    padding: 0.5rem 1.2rem;
-    text-align: center;
-    border-bottom: 3px solid transparent;
+    padding: 0.5rem 1rem;
     cursor: pointer;
-    color: #fff;
+    color: #ddd;
     white-space: nowrap;
-    font-weight: 600;
-    transition: border-color 0.3s ease;
+    border-bottom: 3px solid transparent;
+    transition: border-color 0.3s ease, color 0.3s ease;
   }
   .tab.active {
     border-bottom-color: #ffd700;
+    font-weight: 700;
     color: #ffd700;
   }
-  /* MAIN PRODUCT LIST */
+  .tab:hover:not(.active) {
+    color: #fff;
+  }
+
+  /* Main content grid */
   main {
-    padding: 1rem 1rem 4rem;
-    margin-top: 0.5rem;
+    padding: 1rem;
+    margin-top: 0.6rem;
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  @media(min-width: 600px) {
+  @media (min-width: 600px) {
     main {
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      padding: 1rem 3rem 5rem;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     }
   }
-  /* CARD */
+
+  /* Product Card */
   .card {
     background: #111;
     border-radius: 14px;
-    box-shadow: 0 0 12px rgba(255, 215, 0, 0.15);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
     position: relative;
     cursor: pointer;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     user-select: none;
-    touch-action: pan-y;
   }
   .card img {
     width: 100%;
-    height: 200px;
+    height: 190px;
     object-fit: cover;
     border-top-left-radius: 14px;
     border-top-right-radius: 14px;
+    pointer-events: none;
+    user-select: none;
   }
   .card-content {
-    padding: 1rem 1rem 0.8rem;
+    padding: 1rem 1rem 1.3rem 1rem;
   }
   .card-content h3 {
     margin: 0;
-    font-size: 1.1rem;
     font-weight: 700;
+    font-size: 1.15rem;
     color: #fff;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
   }
   .price {
-    margin-top: 0.3rem;
-    font-weight: 700;
-    font-size: 1rem;
-    color: #ffd700;
-    text-shadow: 0 0 8px #ffd700aa;
-  }
-  .category-tag {
-    margin-top: 0.4rem;
-    display: inline-block;
-    font-size: 0.75rem;
     color: #ffd700cc;
-    background: #222;
-    padding: 2px 8px;
-    border-radius: 10px;
-    user-select: none;
+    font-weight: 700;
+    margin-top: 0.3rem;
+    text-shadow: 0 0 6px #ffd70099;
   }
-  /* DELETE BUTTON */
+  .notes {
+    margin-top: 0.4rem;
+    font-size: 0.9rem;
+    color: #ddd;
+    font-style: italic;
+  }
+  .priority {
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ffc107cc;
+  }
+
+  /* Delete Button */
   .delete-btn {
+    display: none; /* Hidden by default, shown after auth */
     position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(0,0,0,0.6);
-    border-radius: 50%;
-    border: none;
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.6);
     color: #fff;
-    padding: 0.4rem 0.5rem;
-    font-size: 1.1rem;
+    border: none;
+    border-radius: 50%;
+    padding: 0.35rem 0.4rem;
     cursor: pointer;
-    display: none;
-    transition: all 0.25s ease;
+    z-index: 10;
+    transition: transform 0.2s ease, background-color 0.3s ease, color 0.3s ease;
     user-select: none;
   }
-  .delete-btn:hover {
+  .delete-btn:hover, .delete-btn:focus {
+    transform: scale(1.3);
     background: #ffd700;
     color: #000;
-    box-shadow: 0 0 8px #ffd700;
+    outline: none;
   }
-  /* SHOW DELETE BUTTON ONLY IF AUTH */
-  .authenticated .delete-btn {
-    display: block;
+
+  /* Highlight on pointer down */
+  .card:active {
+    /* No pulse, only scale + glow on pointer down */
+    transform: scale(1.03);
+    box-shadow: 0 0 20px #ffd700;
   }
-  /* MODAL */
+
+  /* Modal */
   .modal {
     display: none;
     position: fixed;
@@ -199,254 +215,215 @@
     background: rgba(0,0,0,0.85);
     justify-content: center;
     align-items: center;
-    z-index: 3000;
-    padding: 1rem;
+    z-index: 2000;
+    user-select: none;
+  }
+  .modal.active {
+    display: flex;
   }
   .modal-content {
     background: #222;
-    padding: 1.5rem 1.75rem;
+    padding: 1.5rem 1.8rem;
     border-radius: 14px;
-    width: 100%;
-    max-width: 420px;
-    box-shadow: 0 0 25px #ffd700aa;
+    width: 90%;
+    max-width: 440px;
     animation: fadeInScale 0.4s ease forwards;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    user-select: text;
   }
   @keyframes fadeInScale {
     from { opacity: 0; transform: scale(0.8); }
     to { opacity: 1; transform: scale(1); }
   }
   .modal-content label {
+    display: block;
     font-weight: 600;
+    margin-bottom: 0.3rem;
     color: #ffd700cc;
   }
-  .modal-content input, .modal-content select {
-    padding: 0.6rem 0.8rem;
-    font-size: 1rem;
+  .modal-content input, .modal-content textarea, .modal-content select {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    margin-bottom: 1rem;
     border: none;
-    border-radius: 8px;
-    background: #111;
+    border-radius: 7px;
+    background: #333;
     color: #fff;
-    outline: none;
+    font-size: 1rem;
+    font-family: 'Roboto', sans-serif;
+    transition: background-color 0.3s ease;
   }
-  .modal-content input::placeholder {
-    color: #888;
+  .modal-content input:focus, .modal-content textarea:focus, .modal-content select:focus {
+    outline: 2px solid #ffd700;
+    background-color: #444;
+  }
+  .modal-content textarea {
+    resize: vertical;
+    min-height: 60px;
   }
   .modal-content button {
-    margin-top: 0.5rem;
-    background: #ffd700;
-    color: #000;
-    font-weight: 700;
-    padding: 0.7rem;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    box-shadow: 0 0 15px #ffd700aa;
-    transition: background 0.3s ease;
-  }
-  .modal-content button:hover {
-    background: #ffec70;
-  }
-  /* PASSWORD INPUT */
-  #password-section {
-    display: none;
-    margin-top: 0.5rem;
-  }
-  #password-section input {
-    width: 100%;
-    padding: 0.5rem 0.8rem;
-    border-radius: 10px;
-    border: none;
-    background: #111;
-    color: #fff;
-    font-size: 1rem;
-  }
-  #password-section button {
-    margin-top: 0.5rem;
-    width: 100%;
     background: #ffd700;
     border: none;
-    padding: 0.6rem;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 700;
     color: #000;
-    box-shadow: 0 0 12px #ffd700aa;
-  }
-  #password-section button:hover {
-    background: #ffec70;
-  }
-  /* TOAST */
-  #toast {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: #ffd700;
-    padding: 0.8rem 1.2rem;
-    border-radius: 20px;
+    padding: 0.65rem 1.2rem;
+    border-radius: 8px;
     font-weight: 700;
-    box-shadow: 0 0 20px #ffd700aa;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.5s ease;
+    font-size: 1.1rem;
+    cursor: pointer;
     user-select: none;
+    transition: box-shadow 0.3s ease;
   }
-  #toast.show {
-    opacity: 1;
-    pointer-events: auto;
+  .modal-content button:hover, .modal-content button:focus {
+    box-shadow: 0 0 15px #ffd700;
+    outline: none;
   }
-  /* PULL TO REFRESH */
+
+  /* Sticky Add button */
+  #add-btn {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 1500;
+    display: none; /* Only visible after auth */
+    box-shadow: 0 0 15px #ffd700cc;
+    font-size: 1.8rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 50%;
+    background: #1f1f1f;
+    border: 2px solid #ffd700;
+    color: #ffd700;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.3s ease;
+  }
+  #add-btn:hover, #add-btn:focus {
+    background: #ffd700;
+    color: #000;
+    box-shadow: 0 0 25px #ffd700;
+    outline: none;
+  }
+
+  /* Pull to Refresh indicator */
   #pull-to-refresh {
     position: fixed;
     top: -50px;
     left: 50%;
     transform: translateX(-50%);
-    color: #ffd700;
-    font-size: 1.5rem;
-    user-select: none;
-    transition: top 0.3s ease;
-    z-index: 4000;
-  }
-  /* SHARING */
-  #shareModal {
-    display: none;
-    position: fixed;
-    top:0; left:0; right:0; bottom:0;
-    background: rgba(0,0,0,0.9);
-    justify-content: center;
-    align-items: center;
-    z-index: 5000;
-    padding: 1rem;
-  }
-  #shareModal .modal-content {
-    max-width: 360px;
-    background: #222;
-    padding: 1.5rem;
-    border-radius: 14px;
-    box-shadow: 0 0 20px #ffd700aa;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  #shareModal button {
-    padding: 0.6rem;
-    border-radius: 10px;
-    border: none;
+    color: #ffd700cc;
     font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 0 10px #ffd700aa;
+    font-size: 1.1rem;
+    user-select: none;
+    pointer-events: none;
+    z-index: 2500;
+    transition: top 0.3s ease;
   }
-  #shareModal .close-btn {
-    background: transparent;
-    color: #ffd700;
-    font-size: 1.5rem;
-    position: absolute;
-    top: 10px; right: 15px;
-    cursor: pointer;
-    border: none;
+
+  /* Toast notifications */
+  #toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffd700dd;
+    color: #000;
+    padding: 0.8rem 1.3rem;
+    border-radius: 18px;
+    font-weight: 600;
+    font-size: 1rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    user-select: none;
+    z-index: 3000;
+  }
+  #toast.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* QR Code modal */
+  #qr-modal .modal-content {
+    max-width: 320px;
+    text-align: center;
   }
   #qr-code {
-    margin: 0 auto;
+    margin: 0 auto 1rem;
+    width: 200px;
+    height: 200px;
   }
-  /* STICKY ADD BUTTON */
-  #sticky-add-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #ffd700;
-    border-radius: 50%;
-    width: 56px;
-    height: 56px;
-    border: none;
-    font-size: 2rem;
-    color: #000;
-    box-shadow: 0 0 15px #ffd700cc;
-    cursor: pointer;
-    display: none;
-    z-index: 5000;
-    user-select: none;
-    transition: transform 0.3s ease;
+
+  /* Scrollbar styles for tabs (optional) */
+  .tabs::-webkit-scrollbar {
+    height: 6px;
   }
-  #sticky-add-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 30px #ffd700;
+  .tabs::-webkit-scrollbar-thumb {
+    background: #ffd70055;
+    border-radius: 4px;
   }
+
 </style>
 </head>
 <body>
 <header>
   <div class="title">Bengt’s Wish List</div>
   <div class="control-buttons">
-    <button class="action-button" id="edit-toggle-btn">Bearbeiten</button>
-    <button class="action-button" id="share-btn" title="Teilen"><i class="fas fa-share-alt"></i></button>
+    <button id="edit-toggle" class="action-button" aria-pressed="false" aria-label="Bearbeitungsmodus ein-/ausschalten">Bearbeiten</button>
+    <button id="add-btn" aria-label="Produkt hinzufügen"><i class="fas fa-plus"></i></button>
   </div>
 </header>
 
 <div class="tabs" role="tablist" aria-label="Produktkategorien">
-  <div class="tab active" role="tab" tabindex="0" data-category="All">All</div>
-  <div class="tab" role="tab" tabindex="0" data-category="Elektronik">Elektronik</div>
-  <div class="tab" role="tab" tabindex="0" data-category="Mode">Mode</div>
-  <div class="tab" role="tab" tabindex="0" data-category="Schmuck">Schmuck</div>
+  <div class="tab active" role="tab" tabindex="0" aria-selected="true" data-category="All">All</div>
+  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-category="Elektronik">Elektronik</div>
+  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-category="Mode">Mode</div>
+  <div class="tab" role="tab" tabindex="0" aria-selected="false" data-category="Schmuck">Schmuck</div>
 </div>
 
-<main id="product-list" aria-live="polite" aria-atomic="true" aria-relevant="additions"></main>
+<main id="product-list" role="region" aria-live="polite" aria-label="Produktliste"></main>
 
-<!-- Modal Add/Edit -->
-<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">
+<div id="pull-to-refresh">⇣ Pull to Refresh</div>
+
+<!-- Add / Edit Modal -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" tabindex="-1">
   <div class="modal-content">
-    <h2 id="modalTitle" style="color:#ffd700; text-align:center;">Produkt hinzufügen</h2>
-    <label for="imgUrlInput">Bild URL</label>
-    <input id="imgUrlInput" type="url" placeholder="https://example.com/image.jpg" autocomplete="off" />
-    <label for="nameInput">Produktname</label>
-    <input id="nameInput" type="text" placeholder="Produktname" autocomplete="off" />
-    <label for="priceInput">Preis</label>
-    <input id="priceInput" type="text" placeholder="€79.99" autocomplete="off" />
-    <label for="linkInput">Shop URL</label>
-    <input id="linkInput" type="url" placeholder="https://example.com/shop" autocomplete="off" />
-    <label for="categoryInput">Kategorie</label>
-    <select id="categoryInput">
-      <option>All</option>
-      <option>Elektronik</option>
-      <option>Mode</option>
-      <option>Schmuck</option>
+    <h2 id="modal-title" style="color:#ffd700; margin-top:0; margin-bottom:1rem;">Produkt hinzufügen</h2>
+    <label for="imgUrl">Bild URL</label>
+    <input type="url" id="imgUrl" placeholder="https://example.com/image.jpg" autocomplete="off" />
+    <label for="name">Name</label>
+    <input type="text" id="name" placeholder="Produktname" autocomplete="off" />
+    <label for="price">Preis</label>
+    <input type="text" id="price" placeholder="z.B. €79.99" autocomplete="off" />
+    <label for="link">Shop URL</label>
+    <input type="url" id="link" placeholder="https://shop.example.com" autocomplete="off" />
+    <label for="category-select">Kategorie</label>
+    <select id="category-select" aria-label="Produktkategorie auswählen">
+      <option value="Elektronik">Elektronik</option>
+      <option value="Mode">Mode</option>
+      <option value="Schmuck">Schmuck</option>
+      <option value="All">Andere</option>
     </select>
-    <label for="notesInput">Notizen (optional)</label>
-    <input id="notesInput" type="text" placeholder="Wünsche oder Prioritäten" autocomplete="off" />
-    <button id="saveBtn">Speichern</button>
-    <button id="cancelBtn" style="margin-top: 0.4rem; background:#444; color:#ffd700;">Abbrechen</button>
+    <label for="notes">Notizen (optional)</label>
+    <textarea id="notes" placeholder="Zusätzliche Infos"></textarea>
+    <label for="priority">Priorität</label>
+    <select id="priority" aria-label="Priorität auswählen">
+      <option value="Hoch">Hoch</option>
+      <option value="Mittel" selected>Mittel</option>
+      <option value="Niedrig">Niedrig</option>
+    </select>
+    <button id="save-product-btn">Speichern</button>
   </div>
 </div>
 
-<!-- Password Section -->
-<div id="password-section" style="padding: 1rem 1.5rem; background: #111; border-top: 1px solid #222;">
-  <label for="passwordInput" style="color:#ffd700; font-weight:700;">Passwort eingeben, um bearbeiten zu können:</label>
-  <input id="passwordInput" type="password" autocomplete="off" />
-  <button id="passwordSubmitBtn">Bestätigen</button>
+<!-- QR Code Modal -->
+<div class="modal" id="qr-modal" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title" tabindex="-1">
+  <div class="modal-content">
+    <h2 id="qr-modal-title" style="color:#ffd700; margin-top:0; margin-bottom:1rem;">Teilen</h2>
+    <canvas id="qr-code"></canvas>
+    <button id="close-qr">Schließen</button>
+  </div>
 </div>
 
-<!-- Sticky Add Button -->
-<button id="sticky-add-btn" aria-label="Produkt hinzufügen" title="Produkt hinzufügen">+</button>
-
-<!-- Toast -->
+<!-- Toast Notification -->
 <div id="toast" role="alert" aria-live="assertive"></div>
-
-<!-- Pull to Refresh -->
-<div id="pull-to-refresh" aria-hidden="true">⇣ Pull to Refresh</div>
-
-<!-- Share Modal -->
-<div id="shareModal" class="modal" role="dialog" aria-modal="true" tabindex="-1">
-  <div class="modal-content" style="position:relative;">
-    <button class="close-btn" aria-label="Schließen">&times;</button>
-    <h2 style="color:#ffd700; text-align:center;">Teilen</h2>
-    <button id="shareWhatsAppBtn" style="background:#25D366; color:#fff;">WhatsApp</button>
-    <button id="shareInstagramBtn" style="background:#E1306C; color:#fff;">Instagram</button>
-    <div id="qr-code"></div>
-  </div>
-</div>
 
 <script>
   // --------- Firebase setup ---------
@@ -463,401 +440,383 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // --------- State ---------
-  let products = {};
-  let filteredCategory = 'All';
-  let authenticated = false;
-  let editingProductId = null;
-
-  // Elements
+  // Globale Variablen
   const productList = document.getElementById('product-list');
   const modal = document.getElementById('modal');
+  const qrModal = document.getElementById('qr-modal');
+  const qrCanvas = document.getElementById('qr-code');
+  const addBtn = document.getElementById('add-btn');
+  const editToggleBtn = document.getElementById('edit-toggle');
   const toast = document.getElementById('toast');
-  const tabs = document.querySelectorAll('.tab');
-  const addBtnSticky = document.getElementById('sticky-add-btn');
-  const passwordSection = document.getElementById('password-section');
-  const passwordInput = document.getElementById('passwordInput');
-  const passwordSubmitBtn = document.getElementById('passwordSubmitBtn');
-  const editToggleBtn = document.getElementById('edit-toggle-btn');
-  const shareBtn = document.getElementById('share-btn');
-  const shareModal = document.getElementById('shareModal');
-  const shareWhatsAppBtn = document.getElementById('shareWhatsAppBtn');
-  const shareInstagramBtn = document.getElementById('shareInstagramBtn');
-  const shareCloseBtn = shareModal.querySelector('.close-btn');
-  const qrCodeContainer = document.getElementById('qr-code');
+  const pullToRefresh = document.getElementById('pull-to-refresh');
 
-  // Inputs in modal
-  const imgUrlInput = document.getElementById('imgUrlInput');
-  const nameInput = document.getElementById('nameInput');
-  const priceInput = document.getElementById('priceInput');
-  const linkInput = document.getElementById('linkInput');
-  const categoryInput = document.getElementById('categoryInput');
-  const notesInput = document.getElementById('notesInput');
-  const saveBtn = document.getElementById('saveBtn');
-  const cancelBtn = document.getElementById('cancelBtn');
+  const password = "bengtpw";
+  let authenticated = false;
+  let currentCategory = 'All';
 
-  // Password for edit access
-  const password = "Qp123567s7K!";
-
-  // ------------- UTILS -------------
-
-  function showToast(message) {
+  // Toast anzeigen
+  function showToast(message, duration=2500) {
     toast.textContent = message;
     toast.classList.add('show');
     setTimeout(() => {
       toast.classList.remove('show');
-    }, 3000);
+    }, duration);
   }
 
-  function animateAddButton() {
-    gsap.fromTo(addBtnSticky, { scale: 0 }, { scale: 1, duration: 0.6, ease: "elastic.out(1, 0.5)" });
-  }
-
-  // ----------- AUTH -------------
-
+  // Auth-Status anpassen UI
   function checkAuth() {
     if(authenticated){
-      document.body.classList.add('authenticated');
-      addBtnSticky.style.display = 'block';
+      addBtn.style.display = 'block';
+      document.querySelectorAll('.delete-btn').forEach(btn => btn.style.display = 'block');
+      editToggleBtn.textContent = "Bearbeiten (AN)";
+      editToggleBtn.setAttribute('aria-pressed', 'true');
     } else {
-      document.body.classList.remove('authenticated');
-      addBtnSticky.style.display = 'none';
+      addBtn.style.display = 'none';
+      document.querySelectorAll('.delete-btn').forEach(btn => btn.style.display = 'none');
+      editToggleBtn.textContent = "Bearbeiten";
+      editToggleBtn.setAttribute('aria-pressed', 'false');
     }
   }
 
-  passwordSubmitBtn.addEventListener('click', () => {
-    const val = passwordInput.value.trim();
-    if(val === password){
-      authenticated = true;
-      passwordSection.style.display = 'none';
-      showToast("Bearbeitungsmodus aktiviert");
-      checkAuth();
-    } else {
-      showToast("Falsches Passwort");
-    }
-  });
-
-  // --------- TABS & FILTER ---------
-
-  function setActiveTab(category){
-    filteredCategory = category;
-    tabs.forEach(tab => {
-      if(tab.dataset.category === category) {
-        tab.classList.add('active');
-        tab.setAttribute('aria-selected', 'true');
-        tab.focus();
-      } else {
-        tab.classList.remove('active');
-        tab.setAttribute('aria-selected', 'false');
-      }
-    });
-    renderProducts();
-  }
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => setActiveTab(tab.dataset.category));
-    tab.addEventListener('keydown', e => {
-      if(e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        setActiveTab(tab.dataset.category);
-      }
-    });
-  });
-
-  // --------- FETCH & RENDER PRODUCTS ---------
-
-  function renderProducts(){
-    productList.innerHTML = '';
-    const filteredProducts = Object.entries(products).filter(([id, product]) => {
-      return filteredCategory === 'All' || product.category === filteredCategory;
-    });
-    filteredProducts.forEach(([id, product]) => {
-      addCard(id, product);
-    });
-  }
-
-  // Adds product card with swipe & highlight & animations
-  function addCard(id, product){
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.setAttribute('tabindex', '0');
-    card.setAttribute('role', 'button');
-    card.setAttribute('aria-label', `Produkt: ${product.name}, Preis: ${product.price}`);
-
-    // Card inner HTML
-    card.innerHTML = `
-      <button class="delete-btn" aria-label="Löschen" title="Löschen"><i class="fas fa-trash"></i></button>
-      <img src="${product.imgUrl}" alt="${product.name}" loading="lazy" />
-      <div class="card-content">
-        <h3>${product.name}</h3>
-        <p class="price">${product.price}</p>
-        <span class="category-tag">${product.category}</span>
-        <p style="margin-top:0.5rem; font-size:0.85rem; color:#ffd700cc;">${product.notes || ''}</p>
-      </div>
-    `;
-
-    // Append card first for listeners
-    productList.appendChild(card);
-
-    // Finger press highlight with GSAP
-    let pressTimeout;
-    let isPressed = false;
-    card.addEventListener('pointerdown', e => {
-      if(e.pointerType === 'touch' || e.pointerType === 'pen'){
-        pressTimeout = setTimeout(() => {
-          gsap.to(card, {scale:1.03, boxShadow:"0 0 20px #ffd700", duration: 0.25, ease:"power1.out"});
-          isPressed = true;
-        }, 150);
-      }
-    });
-    card.addEventListener('pointerup', e => {
-      clearTimeout(pressTimeout);
-      if(isPressed){
-        gsap.to(card, {scale:1, boxShadow:"0 0 10px rgba(255,215,0,0.1)", duration: 0.3});
-        isPressed = false;
-      }
-    });
-    card.addEventListener('pointerleave', e => {
-      clearTimeout(pressTimeout);
-      if(isPressed){
-        gsap.to(card, {scale:1, boxShadow:"0 0 10px rgba(255,215,0,0.1)", duration: 0.3});
-        isPressed = false;
-      }
-    });
-
-    // Open product link on click (if not delete btn)
-    card.addEventListener('click', e => {
-      if(e.target.closest('.delete-btn')) return;
-      window.open(product.link, '_blank');
-    });
-
-    // Show delete button only if authenticated
-    const deleteBtn = card.querySelector('.delete-btn');
-    if(authenticated){
-      deleteBtn.style.display = 'block';
-    } else {
-      deleteBtn.style.display = 'none';
-    }
-
-    // Delete product handler with confirm & vibration
-    deleteBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      if(confirm("Produkt wirklich löschen?")){
-        if('vibrate' in navigator) navigator.vibrate(100);
-        db.ref(`wishlist/${id}`).remove();
-        showToast("Produkt gelöscht");
-      }
-    });
-
-    // Swipe-to-delete logic (only on touch devices)
-    let startX = 0, currentX = 0, translateX = 0, swiping = false;
-    const threshold = 80;
-
-    card.addEventListener('touchstart', e => {
-      if(!authenticated) return;
-      startX = e.touches[0].clientX;
-      swiping = true;
-      card.style.transition = '';
-    });
-    card.addEventListener('touchmove', e => {
-      if(!swiping) return;
-      currentX = e.touches[0].clientX;
-      translateX = currentX - startX;
-      if(translateX < 0) { // only swipe left
-        e.preventDefault();
-        card.style.transform = `translateX(${translateX}px)`;
-      }
-    }, { passive: false });
-    card.addEventListener('touchend', e => {
-      if(!swiping) return;
-      swiping = false;
-      if(translateX < -threshold){
-        // Animate out and delete with undo option
-        gsap.to(card, { x: -window.innerWidth, opacity: 0, duration: 0.3, ease: "power1.in", onComplete: () => {
-          // Show Undo toast
-          showUndoToast(id, product);
-        }});
-      } else {
-        gsap.to(card, { x: 0, duration: 0.3, ease: "power1.out" });
-      }
-      translateX = 0;
-    });
-
-    // Pulsating gold shadow on new card
-    gsap.fromTo(card, { boxShadow: '0 0 0px #ffd700' }, { boxShadow: '0 0 15px #ffd700', repeat: 3, yoyo: true, duration: 1, ease: "power1.inOut" });
-  }
-
-  // Undo toast with timeout
-  let undoTimeout = null;
-  function showUndoToast(id, product) {
-    toast.textContent = "Produkt gelöscht. ";
-    const undoBtn = document.createElement('button');
-    undoBtn.textContent = "Rückgängig";
-    undoBtn.style.marginLeft = '10px';
-    undoBtn.style.background = '#ffd700';
-    undoBtn.style.border = 'none';
-    undoBtn.style.padding = '0.3rem 0.7rem';
-    undoBtn.style.borderRadius = '10px';
-    undoBtn.style.cursor = 'pointer';
-    undoBtn.style.color = '#000';
-    undoBtn.style.fontWeight = '700';
-    toast.appendChild(undoBtn);
-    toast.classList.add('show');
-
-    undoBtn.onclick = () => {
-      clearTimeout(undoTimeout);
-      db.ref(`wishlist/${id}`).set(product);
-      toast.classList.remove('show');
-      showToast("Löschen rückgängig gemacht");
-    };
-
-    undoTimeout = setTimeout(() => {
-      toast.classList.remove('show');
-      undoTimeout = null;
-    }, 5000);
-  }
-
-  // --------- RENDER ALL PRODUCTS FROM FIREBASE ---------
-  db.ref('wishlist').on('value', snapshot => {
-    products = snapshot.val() || {};
-    renderProducts();
-  });
-
-  // --------- MODAL LOGIC ---------
-  function openModal(editId=null){
-    editingProductId = editId;
-    if(editId && products[editId]){
-      const p = products[editId];
-      imgUrlInput.value = p.imgUrl;
-      nameInput.value = p.name;
-      priceInput.value = p.price;
-      linkInput.value = p.link;
-      categoryInput.value = p.category;
-      notesInput.value = p.notes || '';
-      saveBtn.textContent = "Speichern";
-    } else {
-      imgUrlInput.value = '';
-      nameInput.value = '';
-      priceInput.value = '';
-      linkInput.value = '';
-      categoryInput.value = 'All';
-      notesInput.value = '';
-      saveBtn.textContent = "Hinzufügen";
-    }
-    modal.style.display = 'flex';
-    modal.focus();
-  }
-  function closeModal(){
-    modal.style.display = 'none';
-    editingProductId = null;
-  }
-  cancelBtn.addEventListener('click', closeModal);
-  modal.addEventListener('click', e => {
-    if(e.target === modal) closeModal();
-  });
-
-  saveBtn.addEventListener('click', () => {
-    const newProduct = {
-      imgUrl: imgUrlInput.value.trim(),
-      name: nameInput.value.trim(),
-      price: priceInput.value.trim(),
-      link: linkInput.value.trim(),
-      category: categoryInput.value,
-      notes: notesInput.value.trim()
-    };
-    if(!newProduct.imgUrl || !newProduct.name || !newProduct.price || !newProduct.link){
-      alert("Bitte alle Pflichtfelder ausfüllen (Bild, Name, Preis, Link)");
-      return;
-    }
-    if(editingProductId){
-      db.ref(`wishlist/${editingProductId}`).set(newProduct);
-      showToast("Produkt aktualisiert");
-    } else {
-      db.ref('wishlist').push(newProduct);
-      showToast("Produkt hinzugefügt");
-    }
-    closeModal();
-  });
-
-  // --------- EDIT MODE TOGGLE ---------
+  // Bearbeitungsmodus togglen mit Passwort
   editToggleBtn.addEventListener('click', () => {
     if(authenticated){
       authenticated = false;
-      passwordSection.style.display = 'block';
       showToast("Bearbeitungsmodus deaktiviert");
       checkAuth();
     } else {
-      passwordSection.style.display = 'block';
-      passwordInput.focus();
+      const entered = prompt("Bitte Passwort eingeben:");
+      if(entered === password){
+        authenticated = true;
+        showToast("Bearbeitungsmodus aktiviert");
+        checkAuth();
+      } else {
+        showToast("Falsches Passwort");
+      }
     }
   });
 
-  // --------- STICKY ADD BUTTON ---------
-  addBtnSticky.addEventListener('click', () => openModal());
-
-  // --------- PULL TO REFRESH ---------
-  let startY = 0;
-  let pullDist = 0;
-  const ptr = document.getElementById('pull-to-refresh');
-  window.addEventListener('touchstart', e => {
-    if(window.scrollY === 0){
-      startY = e.touches[0].clientY;
-      pullDist = 0;
-    }
+  // Modal öffnen & schließen
+  addBtn.addEventListener('click', () => openModal());
+  function openModal() {
+    modal.classList.add('active');
+    // Reset inputs
+    modal.querySelector('#imgUrl').value = '';
+    modal.querySelector('#name').value = '';
+    modal.querySelector('#price').value = '';
+    modal.querySelector('#link').value = '';
+    modal.querySelector('#category-select').value = 'All';
+    modal.querySelector('#notes').value = '';
+    modal.querySelector('#priority').value = 'Mittel';
+    modal.focus();
+  }
+  function closeModal() {
+    modal.classList.remove('active');
+  }
+  modal.addEventListener('click', e => {
+    if(e.target === modal) closeModal();
   });
-  window.addEventListener('touchmove', e => {
-    if(window.scrollY === 0){
-      pullDist = e.touches[0].clientY - startY;
-      if(pullDist > 0){
+  document.addEventListener('keydown', e => {
+    if(e.key === "Escape" && modal.classList.contains('active')) closeModal();
+    if(e.key === "Escape" && qrModal.classList.contains('active')) qrModal.classList.remove('active');
+  });
+
+  // Produkt speichern in Firebase
+  const saveBtn = modal.querySelector('#save-product-btn');
+  saveBtn.addEventListener('click', () => {
+    const product = {
+      imgUrl: modal.querySelector('#imgUrl').value.trim() || 'https://via.placeholder.com/300x190?text=Kein+Bild',
+      name: modal.querySelector('#name').value.trim(),
+      price: modal.querySelector('#price').value.trim(),
+      link: modal.querySelector('#link').value.trim(),
+      category: modal.querySelector('#category-select').value,
+      notes: modal.querySelector('#notes').value.trim(),
+      priority: modal.querySelector('#priority').value
+    };
+    if(!product.name || !product.price) {
+      showToast("Name und Preis sind Pflichtfelder!");
+      return;
+    }
+    db.ref('wishlist').push(product, error => {
+      if(error){
+        showToast("Fehler beim Speichern");
+      } else {
+        showToast("Produkt hinzugefügt");
+        closeModal();
+      }
+    });
+  });
+
+  // Produktkarte erstellen & anhängen
+  function createCard(key, product) {
+    const { imgUrl, name, price, link, category, notes, priority } = product;
+    const card = document.createElement('article');
+    card.className = 'card';
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', `${name}, Preis ${price}, Kategorie ${category}`);
+
+    // Card innerHTML mit Button
+    card.innerHTML = `
+      <button class="delete-btn" aria-label="Löschen" title="Löschen">
+        <i class="fas fa-trash"></i>
+      </button>
+      <img src="${imgUrl}" alt="Bild von ${name}" loading="lazy" />
+      <div class="card-content">
+        <h3>${name}</h3>
+        <p class="price">${price}</p>
+        ${notes ? `<p class="notes">${notes}</p>` : ''}
+        <p class="priority">Priorität: ${priority}</p>
+        <button class="share-btn" aria-label="Teilen"><i class="fas fa-share-alt"></i></button>
+      </div>
+    `;
+
+    // Delete Button event
+    const deleteBtn = card.querySelector('.delete-btn');
+    deleteBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      if(!authenticated){
+        showToast("Bitte zuerst bearbeiten aktivieren");
+        return;
+      }
+      confirmDelete(key);
+    });
+
+    // Share Button event
+    const shareBtn = card.querySelector('.share-btn');
+    shareBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      openShareModal(key, product);
+    });
+
+    // Card click öffnet Shop-Link (außer delete oder share)
+    card.addEventListener('click', e => {
+      if(e.target.closest('button')) return;
+      if(link) window.open(link, '_blank', 'noopener');
+    });
+
+    // Fingerpress Highlight (Glow & Scale)
+    card.addEventListener('pointerdown', e => {
+      if(e.pointerType === 'touch' || e.pointerType === 'pen'){
+        navigator.vibrate?.(10);
+        gsap.to(card, { scale:1.03, boxShadow:"0 0 20px #ffd700", duration: 0.25, ease:"power1.out" });
+      }
+    });
+    ['pointerup','pointercancel','pointerleave'].forEach(evt => {
+      card.addEventListener(evt, e => {
+        if(e.pointerType === 'touch' || e.pointerType === 'pen'){
+          gsap.to(card, { scale:1, boxShadow:"0 0 10px rgba(255,215,0,0.1)", duration: 0.3 });
+        }
+      });
+    });
+
+    // Swipe to delete support (touch only)
+    let startX = 0;
+    let currentX = 0;
+    let swiping = false;
+
+    card.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      swiping = true;
+      card.style.transition = 'none';
+    });
+
+    card.addEventListener('touchmove', e => {
+      if(!swiping) return;
+      currentX = e.touches[0].clientX;
+      let deltaX = currentX - startX;
+      if(deltaX < 0) { // nur nach links swipen erlaubt
         e.preventDefault();
-        ptr.style.top = Math.min(pullDist - 50, 50) + 'px';
+        card.style.transform = `translateX(${deltaX}px)`;
+      }
+    }, { passive: false });
+
+    card.addEventListener('touchend', e => {
+      if(!swiping) return;
+      swiping = false;
+      let deltaX = currentX - startX;
+      card.style.transition = 'transform 0.3s ease';
+
+      if(deltaX < -100) {
+        card.style.transform = `translateX(-100%)`;
+        showUndoDelete(key, card);
+      } else {
+        card.style.transform = 'translateX(0)';
+      }
+    });
+
+    return card;
+  }
+
+  // Produkte laden & filtern
+  function loadProducts(category = 'All') {
+    currentCategory = category;
+    // Tabs active state
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.category === category);
+      tab.setAttribute('aria-selected', tab.dataset.category === category);
+    });
+
+    db.ref('wishlist').once('value', snapshot => {
+      const data = snapshot.val() || {};
+      productList.innerHTML = '';
+      const keys = Object.keys(data);
+
+      // Sortieren: Priorität (Hoch > Mittel > Niedrig), dann Name A-Z
+      const priorityOrder = { Hoch: 3, Mittel: 2, Niedrig: 1 };
+      keys.sort((a,b) => {
+        const pA = priorityOrder[data[a].priority] || 0;
+        const pB = priorityOrder[data[b].priority] || 0;
+        if(pB !== pA) return pB - pA;
+        return (data[a].name.localeCompare(data[b].name));
+      });
+
+      keys.forEach(key => {
+        const product = data[key];
+        if(category === 'All' || product.category === category){
+          productList.appendChild(createCard(key, product));
+        }
+      });
+    });
+  }
+
+  // Undo Delete mit Animation & Timer
+  let undoTimeout = null;
+  function showUndoDelete(key, card) {
+    if(!authenticated) return;
+
+    // Produkt vorübergehend verstecken (nicht löschen)
+    card.style.pointerEvents = 'none';
+    card.style.opacity = '0.4';
+
+    // Toast mit Undo Button
+    toast.innerHTML = `
+      Produkt wird gelöscht. 
+      <button id="undo-btn" style="background:none;border:none;color:#000;font-weight:700;cursor:pointer;">Rückgängig</button>
+    `;
+    toast.classList.add('show');
+
+    // Undo Button Event
+    document.getElementById('undo-btn').onclick = () => {
+      clearTimeout(undoTimeout);
+      toast.classList.remove('show');
+      card.style.pointerEvents = 'auto';
+      card.style.opacity = '1';
+      card.style.transition = 'transform 0.3s ease';
+      card.style.transform = 'translateX(0)';
+      showToast("Löschen abgebrochen");
+    };
+
+    // Nach 3 Sekunden löschen
+    undoTimeout = setTimeout(() => {
+      toast.classList.remove('show');
+      db.ref('wishlist/' + key).remove();
+      showToast("Produkt gelöscht");
+    }, 3000);
+  }
+
+  // Delete mit Bestätigung
+  function confirmDelete(key) {
+    if(confirm("Produkt wirklich löschen?")){
+      db.ref('wishlist/' + key).remove();
+    }
+  }
+
+  // QR Code Modal für Teilen öffnen
+  function openShareModal(key, product){
+    qrModal.classList.add('active');
+    const shareUrl = `${location.origin}${location.pathname}?product=${key}`;
+    QRCode.toCanvas(qrCanvas, shareUrl, { width: 200 }, err => {
+      if(err) {
+        console.error(err);
+        showToast("QR-Code Fehler");
+      }
+    });
+  }
+  document.getElementById('close-qr').addEventListener('click', () => {
+    qrModal.classList.remove('active');
+  });
+  qrModal.addEventListener('click', e => {
+    if(e.target === qrModal) qrModal.classList.remove('active');
+  });
+
+  // Listen auf Firebase Änderungen
+  db.ref('wishlist').on('value', () => {
+    loadProducts(currentCategory);
+  });
+
+  // Kategorie Tabs Events
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => loadProducts(tab.dataset.category));
+    tab.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        loadProducts(tab.dataset.category);
+        tab.focus();
+      }
+    });
+  });
+
+  // Pull to Refresh Logik
+  let startY = 0;
+  let pullDistance = 0;
+  let refreshing = false;
+  document.body.addEventListener('touchstart', e => {
+    if(document.scrollingElement.scrollTop === 0){
+      startY = e.touches[0].clientY;
+      pullDistance = 0;
+    }
+  });
+  document.body.addEventListener('touchmove', e => {
+    if(document.scrollingElement.scrollTop === 0 && !refreshing){
+      const currentY = e.touches[0].clientY;
+      pullDistance = Math.max(0, currentY - startY);
+      if(pullDistance > 0){
+        e.preventDefault();
+        pullToRefresh.style.top = Math.min(pullDistance - 50, 60) + 'px';
+        if(pullDistance > 50){
+          pullToRefresh.textContent = '⇣ Lass los zum Aktualisieren';
+        } else {
+          pullToRefresh.textContent = '⇣ Ziehe nach unten zum Aktualisieren';
+        }
       }
     }
   }, { passive: false });
-  window.addEventListener('touchend', e => {
-    if(pullDist > 80){
-      ptr.textContent = '↻ Aktualisiere...';
-      location.reload();
+  document.body.addEventListener('touchend', e => {
+    if(pullDistance > 50 && !refreshing){
+      refreshing = true;
+      pullToRefresh.textContent = '⟳ Aktualisiere...';
+      pullToRefresh.style.top = '10px';
+      // refresh Firebase data
+      db.ref('wishlist').once('value').then(() => {
+        setTimeout(() => {
+          refreshing = false;
+          pullToRefresh.style.top = '-50px';
+          showToast("Aktualisiert");
+        }, 1000);
+      });
     } else {
-      ptr.style.top = '-50px';
-      ptr.textContent = '⇣ Pull to Refresh';
-    }
-    startY = 0;
-    pullDist = 0;
-  });
-
-  // --------- SHARE MODAL LOGIC ---------
-  shareBtn.addEventListener('click', () => {
-    shareModal.style.display = 'flex';
-    // Generate QR code for current URL
-    qrCodeContainer.innerHTML = '';
-    QRCode.toCanvas(qrCodeContainer, location.href, { width: 160 }, function (error) {
-      if (error) console.error(error);
-    });
-  });
-  shareCloseBtn.addEventListener('click', () => {
-    shareModal.style.display = 'none';
-  });
-
-  shareWhatsAppBtn.addEventListener('click', () => {
-    const url = encodeURIComponent(location.href);
-    window.open(`https://api.whatsapp.com/send?text=${url}`, '_blank');
-  });
-  shareInstagramBtn.addEventListener('click', () => {
-    alert("Instagram Teilen ist nicht direkt möglich. Bitte kopiere die URL manuell.");
-  });
-
-  // --------- KEYBOARD SHORTCUTS ----------
-  window.addEventListener('keydown', e => {
-    if(e.key === 'Escape'){
-      if(modal.style.display === 'flex') closeModal();
-      if(shareModal.style.display === 'flex') shareModal.style.display = 'none';
+      pullToRefresh.style.top = '-50px';
     }
   });
 
-  // --------- INITIAL STATE ---------
-  passwordSection.style.display = 'block';
-  checkAuth();
+  // URL Parameter Produkt Detail Handling (Optional Erweiterung)
+  function handleURLParams(){
+    const params = new URLSearchParams(window.location.search);
+    const prodKey = params.get('product');
+    if(prodKey){
+      db.ref('wishlist/' + prodKey).once('value').then(snap => {
+        const product = snap.val();
+        if(product){
+          openShareModal(prodKey, product);
+        }
+      });
+    }
+  }
+  handleURLParams();
+
+  // Initial load
+  loadProducts();
+
 </script>
 </body>
 </html>
