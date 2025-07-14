@@ -1,249 +1,212 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bengt's Wish List</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Roboto&display=swap" rel="stylesheet" />
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-  <style>
-    :root {
-      --accent-color: #d4af37;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      margin: 0;
-      font-family: 'Roboto', sans-serif;
-      background: linear-gradient(to bottom, #121212, #1f1f1f);
-      color: #fff;
-      overflow-x: hidden;
-      -webkit-tap-highlight-color: transparent;
-    }
-    header {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      background-color: rgba(0, 0, 0, 0.85);
-      z-index: 1000;
-    }
-    .title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.6rem;
-      background: linear-gradient(to left, var(--accent-color), #fff176, var(--accent-color));
-      background-size: 200%;
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      animation: shimmer 6s linear infinite;
-      user-select: none;
-    }
-    @keyframes shimmer {
-      0% { background-position: 200% center; }
-      100% { background-position: -200% center; }
-    }
-    .add-button {
-      background: #1f1f1f;
-      color: var(--accent-color);
-      border: 1px solid var(--accent-color);
-      padding: 0.75rem 1.5rem;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 1.1rem;
-      min-height: 44px;
-      user-select: none;
-      box-shadow: 0 0 5px var(--accent-color);
-      animation: pulse 2.5s infinite;
-    }
-    .add-button:hover {
-      background: var(--accent-color);
-      color: #1f1f1f;
-      box-shadow: 0 0 15px var(--accent-color);
-    }
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 5px var(--accent-color); }
-      50% { box-shadow: 0 0 15px var(--accent-color); }
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bengt's Wish List</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Roboto&display=swap" rel="stylesheet" />
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<style>
+  :root {
+    --accent-color: #d4af37;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(to bottom, #121212, #1f1f1f);
+    color: #fff;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+  }
+  .title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    background: linear-gradient(to left, var(--accent-color), #fff176, var(--accent-color));
+    background-size: 200%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: shimmer 6s linear infinite;
+    user-select: none;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% center; }
+    100% { background-position: -200% center; }
+  }
+  .add-button {
+    background: #1f1f1f;
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+    min-height: 44px;
+    user-select: none;
+    box-shadow: 0 0 5px var(--accent-color);
+    animation: pulse 2.5s infinite;
+  }
+  .add-button:hover {
+    background: var(--accent-color);
+    color: #1f1f1f;
+    box-shadow: 0 0 15px var(--accent-color);
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 5px var(--accent-color); }
+    50% { box-shadow: 0 0 15px var(--accent-color); }
+  }
+  main {
+    margin-top: 5.5rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  @media (min-width: 600px) {
     main {
-      margin-top: 5.5rem;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-      padding: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     }
-    @media (min-width: 600px) {
-      main {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      }
-    }
-    .card {
-      background: #1c1c1c;
-      border-radius: 14px;
-      overflow: hidden;
-      position: relative;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      touch-action: pan-y;
-      user-select: none;
-    }
-    .card:hover {
-      transform: scale(1.02);
-      box-shadow: 0 0 25px var(--accent-color);
-    }
-    .card.pressed {
-      transform: scale(1.05);
-      box-shadow: 0 0 30px var(--accent-color);
-      background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .card img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      user-select: none;
-    }
-    .card-content {
-      padding: 1rem;
-    }
-    .card-content h3 {
-      margin: 0 0 0.25rem 0;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-    .price {
-      color: var(--accent-color);
-      font-weight: bold;
-      font-size: 1rem;
-      margin: 0.25rem 0;
-    }
-    .delete-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(0, 0, 0, 0.6);
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      padding: 0.4rem;
-      cursor: pointer;
-      transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
-      z-index: 10;
-      user-select: none;
-    }
-    .delete-btn:hover {
-      transform: scale(1.3);
-      background: var(--accent-color);
-      color: #000;
-    }
-    /* Modal styles */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.85);
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-      user-select: none;
-    }
-    .modal-content {
-      background: #222;
-      padding: 1.5rem;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 420px;
-      animation: fadeInScale 0.4s ease forwards;
-      box-shadow: 0 0 15px var(--accent-color);
-    }
-    @keyframes fadeInScale {
-      from { opacity: 0; transform: scale(0.8); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    .modal-content input {
-      width: 100%;
-      margin-bottom: 1rem;
-      padding: 0.75rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      background: #1a1a1a;
-      color: #fff;
-      outline: none;
-      box-shadow: inset 0 0 5px #000;
-    }
-    .modal-content input::placeholder {
-      color: #888;
-    }
-    .modal-content button {
-      background: var(--accent-color);
-      border: none;
-      color: #000;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      cursor: pointer;
-      box-shadow: 0 0 10px var(--accent-color);
-      transition: box-shadow 0.3s ease;
-      user-select: none;
-    }
-    .modal-content button:hover {
-      box-shadow: 0 0 25px var(--accent-color);
-    }
-    /* Pull to refresh */
-    #pull-indicator {
-      position: fixed;
-      top: 55px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 1.2rem;
-      color: var(--accent-color);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      user-select: none;
-      pointer-events: none;
-      z-index: 1500;
-    }
-    /* Swipe delete confirm button */
-    .confirm-delete-btn {
-      position: absolute;
-      top: 50%;
-      right: 15px;
-      transform: translateY(-50%);
-      background: var(--accent-color);
-      color: #000;
-      border: none;
-      border-radius: 6px;
-      padding: 0.5rem 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      z-index: 11;
-      user-select: none;
-      box-shadow: 0 0 10px var(--accent-color);
-      transition: background 0.3s ease;
-    }
-    .confirm-delete-btn:hover {
-      background: #fff176;
-    }
-  </style>
+  }
+  .card {
+    background: #1c1c1c;
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    touch-action: pan-y;
+    user-select: none;
+  }
+  .card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 25px var(--accent-color);
+  }
+  .card.pressed {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px var(--accent-color);
+    background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    user-select: none;
+  }
+  .card-content {
+    padding: 1rem;
+  }
+  .card-content h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+  .price {
+    color: var(--accent-color);
+    font-weight: bold;
+    font-size: 1rem;
+    margin: 0.25rem 0;
+  }
+  .delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    padding: 0.4rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+    z-index: 10;
+    user-select: none;
+  }
+  .delete-btn:hover {
+    transform: scale(1.3);
+    background: var(--accent-color);
+    color: #000;
+  }
+  /* Modal styles */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    user-select: none;
+  }
+  .modal-content {
+    background: #222;
+    padding: 1.5rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 420px;
+    animation: fadeInScale 0.4s ease forwards;
+    box-shadow: 0 0 15px var(--accent-color);
+  }
+  @keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .modal-content input {
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #1a1a1a;
+    color: #fff;
+    outline: none;
+    box-shadow: inset 0 0 5px #000;
+  }
+  .modal-content input::placeholder {
+    color: #888;
+  }
+  .modal-content button {
+    background: var(--accent-color);
+    border: none;
+    color: #000;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--accent-color);
+    transition: box-shadow 0.3s ease;
+    user-select: none;
+  }
+  .modal-content button:hover {
+    box-shadow: 0 0 25px var(--accent-color);
+  }
+</style>
 </head>
 <body>
   <header>
     <div class="title">Bengt’s Wish List</div>
-    <button class="add-button" onclick="openModal()">Add</button>
+    <button class="add-button" id="addBtn">Add</button>
   </header>
 
   <main id="product-list" aria-live="polite" aria-label="Wish list products"></main>
-
-  <div id="pull-indicator">↓ Pull to refresh</div>
 
   <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-content">
@@ -252,7 +215,7 @@
       <input type="text" id="name" placeholder="Product Name" autocomplete="off" />
       <input type="text" id="price" placeholder="Price (e.g. €79.99)" autocomplete="off" />
       <input type="url" id="link" placeholder="Shop URL" autocomplete="off" />
-      <button onclick="addProduct()">Save</button>
+      <button id="saveBtn">Save</button>
     </div>
   </div>
 
@@ -268,30 +231,43 @@
     appId: "1:292890468669:web:1cd0a2399d99c00d10e554",
     measurementId: "G-PYPF76P6Z2"
   };
+
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
+  // Elements
   const modal = document.getElementById('modal');
   const productList = document.getElementById('product-list');
-  const pullIndicator = document.getElementById('pull-indicator');
+  const addBtn = document.getElementById('addBtn');
+  const saveBtn = document.getElementById('saveBtn');
 
-  // Open/close modal
-  function openModal() {
+  // Open modal
+  addBtn.addEventListener('click', () => {
     modal.style.display = 'flex';
     document.getElementById('imgUrl').focus();
-  }
-  function closeModal() {
-    modal.style.display = 'none';
-  }
-  window.onclick = function(event) {
-    if (event.target === modal) {
+  });
+
+  // Close modal when clicking outside modal-content
+  window.addEventListener('click', e => {
+    if (e.target === modal) {
       closeModal();
     }
-  };
+  });
+
+  function closeModal() {
+    modal.style.display = 'none';
+    clearInputs();
+  }
+
+  function clearInputs() {
+    ['imgUrl','name','price','link'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+  }
 
   // Add product to Firebase
-  function addProduct() {
+  saveBtn.addEventListener('click', () => {
     const imgUrl = document.getElementById('imgUrl').value.trim();
     const name = document.getElementById('name').value.trim();
     const price = document.getElementById('price').value.trim();
@@ -302,31 +278,56 @@
       return;
     }
 
-    const product = { imgUrl, name, price, link };
-    db.ref('wishlist').push(product);
-
+    db.ref('wishlist').push({ imgUrl, name, price, link });
     closeModal();
-
-    document.getElementById('imgUrl').value = '';
-    document.getElementById('name').value = '';
-    document.getElementById('price').value = '';
-    document.getElementById('link').value = '';
-  }
+  });
 
   // Delete product
   function deleteProduct(key) {
-    db.ref('wishlist/' + key).remove();
+    if (confirm("Delete this product?")) {
+      db.ref('wishlist/' + key).remove();
+    }
   }
 
-  // Swipe & Press handling
-  let startX = 0;
-  let currentCard = null;
-  let confirmBtn = null;
+  // Listen to Firebase data changes
+  db.ref('wishlist').on('value', snapshot => {
+    productList.innerHTML = '';
+    const data = snapshot.val();
+    if (!data) return;
 
-  function handleTouchStart(e) {
-    startX = e.touches[0].clientX;
-    currentCard = e.currentTarget;
-    currentCard.style.transition = 'none';
-    currentCard.classList.add('pressed');
-    // Remove any existing confirm button from other cards
-    if (confirmBtn && confirmBtn.parentElement)
+    Object.keys(data).forEach(key => {
+      const { imgUrl, name, price, link } = data[key];
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.setAttribute('tabindex', '0');
+      card.innerHTML = `
+        <button class="delete-btn" aria-label="Delete product" title="Delete" onclick="deleteProduct('${key}')"><i class="fas fa-trash"></i></button>
+        <img src="${imgUrl}" alt="Product image of ${name}" loading="lazy" />
+        <div class="card-content">
+          <h3>${name}</h3>
+          <p class="price">${price}</p>
+        </div>
+      `;
+      card.onclick = e => {
+        if (!e.target.closest('.delete-btn')) {
+          window.open(link, '_blank');
+        }
+      };
+
+      // Finger press highlight animation
+      card.addEventListener('touchstart', () => {
+        card.classList.add('pressed');
+      });
+      card.addEventListener('touchend', () => {
+        card.classList.remove('pressed');
+      });
+      card.addEventListener('touchcancel', () => {
+        card.classList.remove('pressed');
+      });
+
+      productList.appendChild(card);
+    });
+  });
+</script>
+</body>
+</html>
