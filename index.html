@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,77 +8,110 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Roboto&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <style>
-    * { box-sizing: border-box; }
-    html, body {
+    :root {
+      --black: #000000;
+      --gold: #FFD700;
+      --soft-gold: #e6c200;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
       margin: 0;
-      padding: 0;
       font-family: 'Roboto', sans-serif;
-      background: #000;
+      background-color: var(--black);
       color: #fff;
-      height: 100%;
       overflow-x: hidden;
     }
     header {
       position: sticky;
       top: 0;
-      background: #000;
-      padding: 1rem;
+      background-color: rgba(0, 0, 0, 0.95);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 1rem;
       z-index: 1000;
     }
     .title {
       font-family: 'Playfair Display', serif;
       font-size: 1.5rem;
-      color: #ffd700;
+      background: linear-gradient(to left, var(--gold), #fff4b2, var(--gold));
+      background-size: 200%;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: shimmer 6s linear infinite;
     }
-    .action-buttons {
-      display: flex;
-      gap: 0.5rem;
+    @keyframes shimmer {
+      0% { background-position: 200% center; }
+      100% { background-position: -200% center; }
     }
     .action-button {
-      background: transparent;
-      border: 1px solid #ffd700;
-      color: #ffd700;
-      padding: 0.4rem 0.8rem;
-      border-radius: 5px;
-      cursor: pointer;
+      background: #1f1f1f;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
       font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .action-button:hover {
+      background: var(--gold);
+      color: #000;
+    }
+    .toast {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000;
+      color: var(--gold);
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px var(--gold);
+      opacity: 0;
+      transition: 0.3s;
+      z-index: 2000;
     }
     .tabs {
       display: flex;
       overflow-x: auto;
       background: #111;
-      padding: 0.5rem 1rem;
+      padding: 0.5rem;
     }
     .tab {
       padding: 0.5rem 1rem;
       color: #fff;
       border-bottom: 2px solid transparent;
       cursor: pointer;
-      white-space: nowrap;
     }
     .tab.active {
-      border-bottom: 2px solid #ffd700;
+      border-color: var(--gold);
+      font-weight: bold;
     }
     main {
       padding: 1rem;
       display: grid;
-      grid-template-columns: 1fr;
       gap: 1rem;
     }
     .card {
       background: #111;
-      border-radius: 10px;
+      border-radius: 12px;
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.08);
       overflow: hidden;
-      box-shadow: 0 0 5px rgba(255, 255, 255, 0.05);
-      transition: box-shadow 0.3s ease, transform 0.2s ease;
+      position: relative;
+      transition: transform 0.3s, box-shadow 0.3s;
     }
     .card:active {
-      box-shadow: 0 0 15px #ffd700;
       transform: scale(1.02);
+      box-shadow: 0 0 15px var(--soft-gold);
     }
     .card img {
       width: 100%;
@@ -89,85 +122,87 @@
       padding: 1rem;
     }
     .price {
-      color: #ffd700;
+      color: var(--gold);
+      text-shadow: 0 0 5px rgba(255, 215, 0, 0.4);
       font-weight: bold;
-      text-shadow: 0 0 4px #ffd700;
     }
     .delete-btn {
       display: none;
       position: absolute;
       top: 10px;
       right: 10px;
-      background: #000;
-      color: #fff;
+      background: rgba(0, 0, 0, 0.7);
       border: none;
+      color: #fff;
       border-radius: 50%;
+      padding: 0.5rem;
       cursor: pointer;
-      padding: 0.4rem;
+    }
+    .delete-btn:hover {
+      background: var(--gold);
+      color: #000;
     }
     .modal {
       display: none;
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
-    }
-    .modal-content {
-      background: #222;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1a1a1a;
       padding: 1rem;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 400px;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      box-shadow: 0 -2px 15px rgba(255, 215, 0, 0.2);
+      z-index: 3000;
+      animation: slideUp 0.4s ease;
     }
-    .modal-content input {
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .modal input {
+      display: block;
       width: 100%;
       margin-bottom: 1rem;
       padding: 0.5rem;
-      border-radius: 5px;
+      border-radius: 8px;
       border: none;
     }
-    .modal-content button {
-      width: 100%;
-      background: #ffd700;
+    .modal button {
+      background: var(--gold);
+      color: #000;
+      padding: 0.75rem 1.5rem;
       border: none;
-      padding: 0.6rem;
-      border-radius: 5px;
-      font-weight: bold;
+      border-radius: 8px;
       cursor: pointer;
     }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <header>
-    <div class="title">Bengt's Wish List</div>
-    <div class="action-buttons">
-      <button class="action-button" onclick="toggleEdit()">Bearbeiten</button>
-      <button class="action-button" onclick="share()"><i class="fas fa-share-alt"></i></button>
-      <button class="action-button" id="addBtn" style="display:none;" onclick="openModal()">Add</button>
+    <div class="title">Bengt’s Wish List</div>
+    <div>
+      <button class="action-button" id="editBtn" onclick="toggleEdit()">Bearbeiten</button>
+      <button class="action-button" onclick="shareList()">Teilen</button>
+      <button class="action-button hidden" id="addBtn" onclick="showModal()">Add</button>
     </div>
   </header>
-
   <div class="tabs">
     <div class="tab active" onclick="filter('All')">All</div>
     <div class="tab" onclick="filter('Elektronik')">Elektronik</div>
     <div class="tab" onclick="filter('Mode/Schmuck')">Mode/Schmuck</div>
   </div>
-
   <main id="productList"></main>
-
-  <div class="modal" id="productModal">
-    <div class="modal-content">
-      <input type="text" id="imgUrl" placeholder="Image URL">
-      <input type="text" id="name" placeholder="Product Name">
-      <input type="text" id="price" placeholder="Price (e.g. €79.99)">
-      <input type="text" id="link" placeholder="Shop URL">
-      <input type="text" id="category" placeholder="Category (e.g. Mode/Schmuck)">
-      <button onclick="addProduct()">Save</button>
-    </div>
+  <div class="modal hidden" id="modal">
+    <input type="text" id="imgUrl" placeholder="Image URL">
+    <input type="text" id="name" placeholder="Product Name">
+    <input type="text" id="price" placeholder="Price (e.g. €79.99)">
+    <input type="text" id="link" placeholder="Shop URL">
+    <input type="text" id="category" placeholder="Category (e.g. Mode/Schmuck)">
+    <button onclick="addProduct()">Save</button>
   </div>
-
+  <div class="toast" id="toast">Bearbeiten aktiviert</div>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAmGhT9CjCMoICHA-B6w28_eGZqsq7dfpM",
@@ -176,32 +211,41 @@
       projectId: "bengts-wishlist",
       storageBucket: "bengts-wishlist.appspot.com",
       messagingSenderId: "292890468669",
-      appId: "1:292890468669:web:1cd0a2399d99c00d10e554",
-      measurementId: "G-PYPF76P6Z2"
+      appId: "1:292890468669:web:1cd0a2399d99c00d10e554"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const modal = document.getElementById('productModal');
-    const productList = document.getElementById('productList');
+    const toast = document.getElementById('toast');
+    const modal = document.getElementById('modal');
+    const editBtn = document.getElementById('editBtn');
     const addBtn = document.getElementById('addBtn');
-    let currentFilter = 'All';
+    const list = document.getElementById('productList');
 
-    let passwordUnlocked = false;
+    let editMode = false;
+    const PASSWORD = "bengtpw";
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.style.opacity = 1;
+      setTimeout(() => toast.style.opacity = 0, 2500);
+    }
 
     function toggleEdit() {
-      const pass = prompt("Bitte Passwort eingeben:");
-      if (pass === "bengtpw") {
-        passwordUnlocked = true;
-        addBtn.style.display = 'inline-block';
-        document.querySelectorAll('.delete-btn').forEach(btn => btn.style.display = 'block');
+      const input = prompt("Passwort eingeben:");
+      if (input === PASSWORD) {
+        editMode = !editMode;
+        editBtn.textContent = editMode ? "Bearbeiten beendet" : "Bearbeiten";
+        addBtn.classList.toggle('hidden', !editMode);
+        document.querySelectorAll('.delete-btn').forEach(btn => btn.style.display = editMode ? 'block' : 'none');
+        showToast(editMode ? "Bearbeiten aktiviert" : "Bearbeiten beendet");
       } else {
         alert("Falsches Passwort");
       }
     }
 
-    function openModal() {
-      modal.style.display = 'flex';
+    function showModal() {
+      modal.classList.remove('hidden');
     }
 
     function addProduct() {
@@ -210,67 +254,57 @@
         name: document.getElementById('name').value,
         price: document.getElementById('price').value,
         link: document.getElementById('link').value,
-        category: document.getElementById('category').value
+        category: document.getElementById('category').value || 'All'
       };
       db.ref('wishlist').push(product);
-      modal.style.display = 'none';
+      modal.classList.add('hidden');
     }
 
-    function renderCard(key, item) {
-      if (currentFilter !== 'All' && item.category !== currentFilter) return;
+    function renderCard(key, data) {
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML = `
-        <button class="delete-btn" style="display:${passwordUnlocked ? 'block' : 'none'}" onclick="deleteProduct('${key}')"><i class="fas fa-trash"></i></button>
-        <img src="${item.imgUrl}" alt="">
+        <button class="delete-btn" onclick="deleteItem('${key}')"><i class="fas fa-trash"></i></button>
+        <img src="${data.imgUrl}" alt="${data.name}">
         <div class="card-content">
-          <h3>${item.name}</h3>
-          <p class="price">${item.price}</p>
-        </div>
-      `;
-      card.addEventListener('click', e => {
-        if (!e.target.closest('.delete-btn')) {
-          window.open(item.link, '_blank');
-        }
-      });
-      productList.appendChild(card);
-    }
-
-    function deleteProduct(key) {
-      if (confirm("Wirklich löschen?")) {
-        db.ref('wishlist/' + key).remove();
+          <h3>${data.name}</h3>
+          <p class="price">${data.price}</p>
+        </div>`;
+      card.onclick = (e) => {
+        if (!e.target.closest('.delete-btn')) window.open(data.link, '_blank');
       }
+      list.appendChild(card);
     }
 
-    function filter(category) {
-      currentFilter = category;
+    function deleteItem(key) {
+      if (confirm("Löschen?")) db.ref('wishlist/' + key).remove();
+    }
+
+    function filter(cat) {
       document.querySelectorAll('.tab').forEach(tab => {
-        if (tab.textContent.trim() === category) {
-          tab.classList.add('active');
-        } else {
-          tab.classList.remove('active');
-        }
+        tab.classList.toggle('active', tab.textContent.trim() === cat);
       });
-      renderAll();
-    }
-
-    function renderAll() {
-      db.ref('wishlist').once('value', snapshot => {
-        productList.innerHTML = '';
-        const data = snapshot.val();
+      db.ref('wishlist').once('value', snap => {
+        list.innerHTML = '';
+        const data = snap.val();
         if (!data) return;
-        Object.keys(data).forEach(key => renderCard(key, data[key]));
+        Object.keys(data).forEach(key => {
+          if (cat === 'All' || data[key].category === cat) renderCard(key, data[key]);
+        });
       });
     }
 
-    function share() {
-      navigator.share ? navigator.share({
-        title: "Bengt's Wish List",
-        url: location.href
-      }) : alert("Dein Browser unterstützt das Teilen nicht.");
-    }
+    db.ref('wishlist').on('value', snap => {
+      list.innerHTML = '';
+      const data = snap.val();
+      if (!data) return;
+      Object.keys(data).forEach(key => renderCard(key, data[key]));
+    });
 
-    db.ref('wishlist').on('value', () => renderAll());
+    function shareList() {
+      const url = window.location.href;
+      navigator.share ? navigator.share({ title: 'Bengt’s Wish List', url }) : alert('Link kopiert: ' + url);
+    }
   </script>
 </body>
 </html>
