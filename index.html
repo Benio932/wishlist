@@ -163,6 +163,7 @@
   }
   .card-content {
     padding: 1rem;
+    position: relative;
   }
   .card-content h3 {
     margin: 0 0 0.25rem 0;
@@ -173,7 +174,7 @@
     color: var(--accent-color);
     font-weight: bold;
     font-size: 1rem;
-    margin: 0.25rem 0;
+    margin: 0.25rem 0 1.5rem 0;
     text-shadow: 0 0 5px rgba(212,175,55,0.5);
     cursor: pointer;
   }
@@ -201,6 +202,34 @@
     transform: scale(1.3);
     background: var(--accent-color);
     color: #000;
+  }
+
+  /* Priorität Sterne unten rechts */
+  .priority-stars {
+    position: absolute;
+    bottom: 6px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    font-size: 0.75rem;
+    align-items: center;
+    color: var(--accent-color);
+    user-select: none;
+  }
+  .priority-stars span {
+    font-weight: 600;
+    margin-right: 4px;
+    font-size: 0.8rem;
+  }
+  .priority-stars i {
+    font-size: 0.75rem;
+    margin-left: 0;
+  }
+  .priority-stars i.filled {
+    color: var(--accent-color);
+  }
+  .priority-stars i.empty {
+    color: #555;
   }
 
   /* Leere Kategorie Anzeige */
@@ -311,6 +340,7 @@
 
   <nav id="category-filter" aria-label="Produktkategorien">
     <button data-category="alle" class="active">Alle</button>
+    <button data-category="priorität">Priorität</button>
     <button data-category="mode/schmuck">Mode/Schmuck</button>
     <button data-category="technik">Technik</button>
     <button data-category="pflege">Pflege</button>
@@ -328,6 +358,7 @@
       <input type="text" id="price" placeholder="Price (e.g. €79.99)" autocomplete="off" />
       <input type="url" id="link" placeholder="Shop URL" autocomplete="off" />
       <input type="text" id="category" placeholder="Kategorie (Mode/Schmuck, Technik, Pflege, Sport, Sonstiges)" autocomplete="off" />
+      <input type="number" id="priority" placeholder="Priorität (1-5)" min="1" max="5" autocomplete="off" />
       <div style="display:flex; justify-content:flex-end; gap: 1rem;">
         <button id="saveBtn">Save</button>
         <button id="cancelBtn" style="background:#444; color:#ddd;">Cancel</button>
@@ -426,6 +457,7 @@
         document.getElementById('price').value = data.price || '';
         document.getElementById('link').value = data.link || '';
         document.getElementById('category').value = data.category || '';
+        document.getElementById('priority').value = data.priority || '';
         saveBtn.textContent = "Speichern";
         document.getElementById('imgUrl').focus();
       });
@@ -445,7 +477,7 @@
 
   // Clear modal inputs
   function clearInputs() {
-    ['imgUrl','name','price','link','category'].forEach(id => {
+    ['imgUrl','name','price','link','category','priority'].forEach(id => {
       document.getElementById(id).value = '';
     });
   }
@@ -456,143 +488,184 @@
     const name = document.getElementById('name').value.trim();
     const price = document.getElementById('price').value.trim();
     const link = document.getElementById('link').value.trim();
-    let category = document.getElementById('category').value.trim().toLowerCase();
+    const category = document.getElementById('category').value.trim().toLowerCase();
+    let priority = parseInt(document.getElementById('priority').value, 10);
 
-    const validCategories = ['mode/schmuck', 'technik', 'pflege', 'sport', 'sonstiges'];
-
-    if (!imgUrl || !name || !link) {
-      alert("Bitte Bild-URL, Produktname und Shop-URL ausfüllen.");
+    if (!name) {
+      alert("Bitte Produktnamen eingeben!");
       return;
     }
-
-    // Kategorie validieren, sonst "sonstiges"
-    if (!validCategories.includes(category)) {
-      category = 'sonstiges';
+    if (!imgUrl) {
+      alert("Bitte Bild-URL eingeben!");
+      return;
     }
+    if (!price) {
+      alert("Bitte Preis eingeben!");
+      return;
+    }
+    if (!category) {
+      alert("Bitte Kategorie eingeben!");
+      return;
+    }
+    if (isNaN(priority) || priority < 1 || priority > 5) {
+      priority = 3; // Default Priorität 3, wenn ungültig
+    }
+
+    const productData = { imgUrl, name, price, link, category, priority };
 
     if (editingKey) {
-      db.ref('wishlist/' + editingKey).update({ imgUrl, name, price, link, category });
+      db.ref('wishlist/' + editingKey).set(productData)
+        .then(() => {
+          showToast("Produkt gespeichert");
+          closeModal();
+        })
+        .catch(() => alert("Fehler beim Speichern"));
     } else {
-      db.ref('wishlist').push({ imgUrl, name, price, link, category });
+      db.ref('wishlist').push(productData)
+        .then(() => {
+          showToast("Produkt hinzugefügt");
+          closeModal();
+        })
+        .catch(() => alert("Fehler beim Hinzufügen"));
     }
-
-    closeModal();
   });
 
-  // Delete product function
-  function deleteProduct(key) {
-    if (confirm("Produkt wirklich löschen?")) {
-      db.ref('wishlist/' + key).remove();
-    }
-  }
-
-  // Listen for changes and refresh product list
-  function refreshProductList() {
-    db.ref('wishlist').once('value').then(snapshot => {
-      productList.innerHTML = '';
-      const data = snapshot.val();
-      if (!data) return showEmptyMessage(selectedCategory);
-
-      // Filter products by category
-      const filteredEntries = Object.entries(data).filter(([key, val]) => {
-        if (selectedCategory === 'alle') return true;
-        return val.category && val.category.toLowerCase() === selectedCategory;
-      });
-
-      if (filteredEntries.length === 0) {
-        showEmptyMessage(selectedCategory);
-        return;
-      }
-
-      for (const [key, { imgUrl, name, price, link }] of filteredEntries) {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.setAttribute('tabindex', '0');
-        card.setAttribute('data-key', key);
-
-        const deleteBtnHTML = `<button class="delete-btn" aria-label="Produkt löschen" title="Löschen" style="display:${editMode ? 'block' : 'none'}" onclick="deleteProduct('${key}')"><i class="fas fa-trash"></i></button>`;
-
-        card.innerHTML = `
-          ${deleteBtnHTML}
-          <img src="${imgUrl}" alt="Produktbild von ${name}" loading="lazy" />
-          <div class="card-content">
-            <h3>${name}</h3>
-            <p class="price" tabindex="0">${price}</p>
-          </div>
-        `;
-
-        // Klick auf Karte öffnet Edit-Modal im Bearbeitungsmodus, sonst Link
-        card.addEventListener('click', e => {
-          if (e.target.closest('.delete-btn')) return; // Kein Klick auf Löschen
-          if (editMode) {
-            editingKey = key;
-            openModal();
-          } else {
-            window.open(link, '_blank');
-          }
-        });
-
-        // Touch Highlight
-        card.addEventListener('touchstart', () => {
-          card.classList.add('pressed');
-        });
-        card.addEventListener('touchend', () => {
-          card.classList.remove('pressed');
-        });
-        card.addEventListener('touchcancel', () => {
-          card.classList.remove('pressed');
-        });
-
-        productList.appendChild(card);
-      }
-    });
-  }
-
-  // Zeige Nachricht bei leerer Kategorie
-  function showEmptyMessage(category) {
-    productList.innerHTML = `
-      <div class="empty-category" role="alert" aria-live="polite">
-        <i class="fas fa-star"></i>
-        <p>Hier sieht es leer aus.</p>
-      </div>
-    `;
-  }
-
-  // Kategorie-Filter Klick-Handler
+  // Listen to category filter clicks
   categoryFilter.addEventListener('click', e => {
     if (e.target.tagName !== 'BUTTON') return;
-    const newCategory = e.target.getAttribute('data-category');
-    if (newCategory === selectedCategory) return;
+    const newCat = e.target.dataset.category;
+    if (!newCat) return;
 
-    selectedCategory = newCategory;
-
-    // Aktive Klasse umschalten
+    selectedCategory = newCat;
     Array.from(categoryFilter.children).forEach(btn => btn.classList.remove('active'));
     e.target.classList.add('active');
-
     refreshProductList();
   });
 
-  // WhatsApp Share Button
+  // Share button - WhatsApp share link
   shareBtn.addEventListener('click', () => {
-    const pageUrl = encodeURIComponent(window.location.href);
-    const shareText = encodeURIComponent("Schau dir meine Wunschliste an:");
-    const whatsappUrl = `https://wa.me/?text=${shareText}%20${pageUrl}`;
+    const url = encodeURIComponent(location.href);
+    const text = encodeURIComponent("Schau dir Bengt's Wunschliste an: ");
+    const whatsappUrl = `https://wa.me/?text=${text}${url}`;
     window.open(whatsappUrl, '_blank');
   });
 
-  // Initial load
+  // Refresh product list (fetch from DB and render)
+  function refreshProductList() {
+    db.ref('wishlist').once('value').then(snapshot => {
+      const data = snapshot.val() || {};
+      const products = Object.entries(data).map(([key, val]) => ({ key, ...val }));
+
+      renderProducts(products);
+    });
+  }
+
+  // Render products filtered & sorted by category / priority
+  function renderProducts(products) {
+    productList.innerHTML = '';
+
+    let filteredProducts;
+    if (selectedCategory === 'alle') {
+      filteredProducts = products;
+    } else if (selectedCategory === 'priorität') {
+      // Sortiere alle Produkte nach Priorität absteigend
+      filteredProducts = [...products].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    } else {
+      filteredProducts = products.filter(p => p.category === selectedCategory);
+    }
+
+    if (filteredProducts.length === 0) {
+      productList.innerHTML = `
+        <div class="empty-category" role="alert" aria-live="assertive">
+          <i class="fa-regular fa-face-sad-tear"></i><br />
+          Keine Produkte in dieser Kategorie.
+        </div>
+      `;
+      return;
+    }
+
+    filteredProducts.forEach(product => {
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.setAttribute('tabindex', editMode ? '0' : '-1');
+      card.setAttribute('aria-label', `${product.name}, Preis: ${product.price}, Kategorie: ${product.category}`);
+
+      // Bild mit Link, falls vorhanden
+      let imgHTML = `<img src="${product.imgUrl}" alt="${product.name}" draggable="false" loading="lazy" />`;
+      if (product.link) {
+        imgHTML = `<a href="${product.link}" target="_blank" rel="noopener noreferrer" aria-label="Zum Shop von ${product.name}">${imgHTML}</a>`;
+      }
+
+      card.innerHTML = `
+        ${imgHTML}
+        <div class="card-content">
+          <h3>${product.name}</h3>
+          <div class="price" tabindex="0" aria-label="Preis ${product.price}" role="textbox" contenteditable="${editMode}">${product.price}</div>
+          <div class="priority-stars" aria-label="Priorität ${product.priority || 0} von 5">
+            <span>Priorität:</span>
+            ${generateStars(product.priority || 0)}
+          </div>
+          ${editMode ? `<button class="delete-btn" aria-label="Produkt löschen">×</button>` : ''}
+        </div>
+      `;
+
+      // Löschen Button nur im Edit-Modus
+      if (editMode) {
+        const delBtn = card.querySelector('.delete-btn');
+        delBtn.addEventListener('click', () => {
+          if (confirm(`Produkt "${product.name}" wirklich löschen?`)) {
+            db.ref('wishlist/' + product.key).remove().then(() => {
+              showToast("Produkt gelöscht");
+              refreshProductList();
+            });
+          }
+        });
+
+        // Preis direkt editierbar speichern
+        const priceDiv = card.querySelector('.price');
+        priceDiv.addEventListener('blur', () => {
+          const newPrice = priceDiv.textContent.trim();
+          if (newPrice.length === 0) {
+            priceDiv.textContent = product.price; // revert
+            return;
+          }
+          if (newPrice !== product.price) {
+            db.ref('wishlist/' + product.key + '/price').set(newPrice).then(() => {
+              showToast("Preis aktualisiert");
+              refreshProductList();
+            });
+          }
+        });
+
+        // Card click öffnet modal zum Editieren
+        card.addEventListener('click', e => {
+          if (e.target.classList.contains('delete-btn') || e.target.isContentEditable) return;
+          editingKey = product.key;
+          openModal();
+        });
+
+      }
+
+      productList.appendChild(card);
+    });
+  }
+
+  // Sterne HTML generieren für Priorität
+  function generateStars(priority) {
+    let starsHTML = '';
+    for (let i = 1; i <= 5; i++) {
+      if (i <= priority) {
+        starsHTML += '<i class="fa-solid fa-star filled" aria-hidden="true"></i>';
+      } else {
+        starsHTML += '<i class="fa-regular fa-star empty" aria-hidden="true"></i>';
+      }
+    }
+    return starsHTML;
+  }
+
+  // Initial laden
   refreshProductList();
 
-  // Expose deleteProduct to window so inline onclick works
-  window.deleteProduct = deleteProduct;
-
-  // Close modal on outside click
-  window.addEventListener('click', e => {
-    if (e.target === modal) {
-      closeModal();
-    }
-  });
 </script>
 </body>
 </html>
