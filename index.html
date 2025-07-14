@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Roboto&display=swap" rel="stylesheet" />
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
 <style>
   :root {
     --accent-color: #d4af37;
@@ -49,7 +50,12 @@
     0% { background-position: 200% center; }
     100% { background-position: -200% center; }
   }
-  .add-button {
+  .button-container {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  button {
     background: #1f1f1f;
     color: var(--accent-color);
     border: 1px solid var(--accent-color);
@@ -61,16 +67,12 @@
     min-height: 44px;
     user-select: none;
     box-shadow: 0 0 5px var(--accent-color);
-    animation: pulse 2.5s infinite;
+    font-weight: 600;
   }
-  .add-button:hover {
+  button:hover {
     background: var(--accent-color);
     color: #1f1f1f;
     box-shadow: 0 0 15px var(--accent-color);
-  }
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 5px var(--accent-color); }
-    50% { box-shadow: 0 0 15px var(--accent-color); }
   }
   main {
     margin-top: 5.5rem;
@@ -123,6 +125,14 @@
     font-weight: bold;
     font-size: 1rem;
     margin: 0.25rem 0;
+    text-shadow: 0 0 5px rgba(212,175,55,0.5);
+    cursor: pointer;
+  }
+  .price[contenteditable="true"] {
+    outline: 2px solid var(--accent-color);
+    border-radius: 5px;
+    padding: 0 4px;
+    cursor: text;
   }
   .delete-btn {
     position: absolute;
@@ -198,26 +208,58 @@
   .modal-content button:hover {
     box-shadow: 0 0 25px var(--accent-color);
   }
+
+  /* Toast message */
+  #toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent-color);
+    color: #000;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    box-shadow: 0 0 15px var(--accent-color);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    z-index: 3000;
+  }
+  #toast.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
 </style>
 </head>
 <body>
   <header>
     <div class="title">Bengt’s Wish List</div>
-    <button class="add-button" id="addBtn">Add</button>
+    <div class="button-container">
+      <button id="editToggleBtn">Bearbeiten</button>
+      <button id="addBtn" style="display:none;">Add</button>
+    </div>
   </header>
 
   <main id="product-list" aria-live="polite" aria-label="Wish list products"></main>
 
   <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-content">
-      <h2 id="modal-title" style="color: var(--accent-color); font-family: 'Playfair Display', serif; margin-bottom: 1rem;">Add New Product</h2>
+      <h2 id="modal-title" style="color: var(--accent-color); font-family: 'Playfair Display', serif; margin-bottom: 1rem;">Add / Edit Product</h2>
       <input type="text" id="imgUrl" placeholder="Image URL" autocomplete="off" />
       <input type="text" id="name" placeholder="Product Name" autocomplete="off" />
       <input type="text" id="price" placeholder="Price (e.g. €79.99)" autocomplete="off" />
       <input type="url" id="link" placeholder="Shop URL" autocomplete="off" />
-      <button id="saveBtn">Save</button>
+      <div style="display:flex; justify-content:flex-end; gap: 1rem;">
+        <button id="saveBtn">Save</button>
+        <button id="cancelBtn" style="background:#444; color:#ddd;">Cancel</button>
+      </div>
     </div>
   </div>
+
+  <div id="toast"></div>
 
 <script>
   // Firebase config
@@ -240,33 +282,95 @@
   const modal = document.getElementById('modal');
   const productList = document.getElementById('product-list');
   const addBtn = document.getElementById('addBtn');
+  const editToggleBtn = document.getElementById('editToggleBtn');
   const saveBtn = document.getElementById('saveBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const toast = document.getElementById('toast');
 
-  // Open modal
-  addBtn.addEventListener('click', () => {
-    modal.style.display = 'flex';
-    document.getElementById('imgUrl').focus();
-  });
+  // State
+  let editMode = false;
+  let editingKey = null; // key of product being edited
 
-  // Close modal when clicking outside modal-content
-  window.addEventListener('click', e => {
-    if (e.target === modal) {
+  // Show toast message
+  function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  // Password prompt for edit mode
+  editToggleBtn.addEventListener('click', () => {
+    if (!editMode) {
+      const pw = prompt("Bitte Passwort eingeben:");
+      if (pw === 'bengtpw') {
+        editMode = true;
+        editToggleBtn.textContent = "Bearbeiten beendet";
+        addBtn.style.display = 'inline-block';
+        showToast("Bearbeiten aktiviert");
+        refreshProductList();
+      } else {
+        alert("Falsches Passwort!");
+      }
+    } else {
+      // Deaktivieren
+      editMode = false;
+      editingKey = null;
+      editToggleBtn.textContent = "Bearbeiten";
+      addBtn.style.display = 'none';
       closeModal();
+      showToast("Bearbeiten beendet");
+      refreshProductList();
     }
   });
 
+  // Add new product button
+  addBtn.addEventListener('click', () => {
+    editingKey = null;
+    openModal();
+  });
+
+  // Cancel button in modal
+  cancelBtn.addEventListener('click', () => {
+    closeModal();
+  });
+
+  // Open modal helper
+  function openModal() {
+    modal.style.display = 'flex';
+    if (editingKey) {
+      // Fill inputs with current data
+      db.ref('wishlist/' + editingKey).once('value').then(snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
+        document.getElementById('imgUrl').value = data.imgUrl || '';
+        document.getElementById('name').value = data.name || '';
+        document.getElementById('price').value = data.price || '';
+        document.getElementById('link').value = data.link || '';
+        saveBtn.textContent = "Speichern";
+        document.getElementById('imgUrl').focus();
+      });
+    } else {
+      clearInputs();
+      saveBtn.textContent = "Hinzufügen";
+      document.getElementById('imgUrl').focus();
+    }
+  }
+
+  // Close modal helper
   function closeModal() {
     modal.style.display = 'none';
     clearInputs();
+    editingKey = null;
   }
 
+  // Clear modal inputs
   function clearInputs() {
     ['imgUrl','name','price','link'].forEach(id => {
       document.getElementById(id).value = '';
     });
   }
 
-  // Add product to Firebase
+  // Save product (add or update)
   saveBtn.addEventListener('click', () => {
     const imgUrl = document.getElementById('imgUrl').value.trim();
     const name = document.getElementById('name').value.trim();
@@ -274,59 +378,117 @@
     const link = document.getElementById('link').value.trim();
 
     if (!imgUrl || !name || !link) {
-      alert("Please fill in Image URL, Product Name, and Shop URL.");
+      alert("Bitte Bild-URL, Produktname und Shop-URL ausfüllen.");
       return;
     }
 
-    db.ref('wishlist').push({ imgUrl, name, price, link });
+    if (editingKey) {
+      db.ref('wishlist/' + editingKey).update({ imgUrl, name, price, link });
+    } else {
+      db.ref('wishlist').push({ imgUrl, name, price, link });
+    }
+
     closeModal();
   });
 
-  // Delete product
+  // Delete product function
   function deleteProduct(key) {
-    if (confirm("Delete this product?")) {
+    if (confirm("Produkt wirklich löschen?")) {
       db.ref('wishlist/' + key).remove();
     }
   }
 
-  // Listen to Firebase data changes
-  db.ref('wishlist').on('value', snapshot => {
-    productList.innerHTML = '';
-    const data = snapshot.val();
-    if (!data) return;
+  // Inline Preis bearbeiten (optional, hier nicht aktiviert, nur vorbereitet)
+  function makePriceEditable(elem, key, currentPrice) {
+    if (!editMode) return;
 
-    Object.keys(data).forEach(key => {
-      const { imgUrl, name, price, link } = data[key];
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.setAttribute('tabindex', '0');
-      card.innerHTML = `
-        <button class="delete-btn" aria-label="Delete product" title="Delete" onclick="deleteProduct('${key}')"><i class="fas fa-trash"></i></button>
-        <img src="${imgUrl}" alt="Product image of ${name}" loading="lazy" />
-        <div class="card-content">
-          <h3>${name}</h3>
-          <p class="price">${price}</p>
-        </div>
-      `;
-      card.onclick = e => {
-        if (!e.target.closest('.delete-btn')) {
-          window.open(link, '_blank');
-        }
-      };
+    elem.setAttribute('contenteditable', 'true');
+    elem.focus();
 
-      // Finger press highlight animation
-      card.addEventListener('touchstart', () => {
-        card.classList.add('pressed');
-      });
-      card.addEventListener('touchend', () => {
-        card.classList.remove('pressed');
-      });
-      card.addEventListener('touchcancel', () => {
-        card.classList.remove('pressed');
-      });
+    function finishEditing() {
+      elem.removeAttribute('contenteditable');
+      const newPrice = elem.textContent.trim();
+      if (newPrice !== currentPrice) {
+        db.ref('wishlist/' + key).update({ price: newPrice });
+      }
+      elem.removeEventListener('blur', finishEditing);
+      elem.removeEventListener('keydown', onKeyDown);
+    }
 
-      productList.appendChild(card);
+    function onKeyDown(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        elem.blur();
+      }
+    }
+
+    elem.addEventListener('blur', finishEditing);
+    elem.addEventListener('keydown', onKeyDown);
+  }
+
+  // Listen for changes and refresh product list
+  function refreshProductList() {
+    db.ref('wishlist').once('value').then(snapshot => {
+      productList.innerHTML = '';
+      const data = snapshot.val();
+      if (!data) return;
+
+      Object.keys(data).forEach(key => {
+        const { imgUrl, name, price, link } = data[key];
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('data-key', key);
+
+        const deleteBtnHTML = `<button class="delete-btn" aria-label="Produkt löschen" title="Löschen" style="display:${editMode ? 'block' : 'none'}" onclick="deleteProduct('${key}')"><i class="fas fa-trash"></i></button>`;
+
+        card.innerHTML = `
+          ${deleteBtnHTML}
+          <img src="${imgUrl}" alt="Produktbild von ${name}" loading="lazy" />
+          <div class="card-content">
+            <h3>${name}</h3>
+            <p class="price" tabindex="0">${price}</p>
+          </div>
+        `;
+
+        // Klick auf Karte öffnet Edit-Modal im Bearbeitungsmodus, sonst Link
+        card.addEventListener('click', e => {
+          if (e.target.closest('.delete-btn')) return; // Kein Klick auf Löschen
+          if (editMode) {
+            editingKey = key;
+            openModal();
+          } else {
+            window.open(link, '_blank');
+          }
+        });
+
+        // Touch Highlight
+        card.addEventListener('touchstart', () => {
+          card.classList.add('pressed');
+        });
+        card.addEventListener('touchend', () => {
+          card.classList.remove('pressed');
+        });
+        card.addEventListener('touchcancel', () => {
+          card.classList.remove('pressed');
+        });
+
+        productList.appendChild(card);
+      });
     });
+  }
+
+  // Initial load
+  refreshProductList();
+
+  // Expose deleteProduct to window so inline onclick works
+  window.deleteProduct = deleteProduct;
+
+  // Close modal on outside click
+  window.addEventListener('click', e => {
+    if (e.target === modal) {
+      closeModal();
+    }
   });
 </script>
 </body>
