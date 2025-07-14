@@ -144,9 +144,11 @@
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     touch-action: pan-y;
     user-select: none;
+    will-change: transform;
   }
   .card:hover {
-    transform: scale(1.02);
+    /* Kleiner Skalen-Boost, der durch 3D ersetzt wird */
+    /* transform: scale(1.02); */
     box-shadow: 0 0 25px var(--accent-color);
   }
   .card.pressed {
@@ -489,183 +491,275 @@
     const price = document.getElementById('price').value.trim();
     const link = document.getElementById('link').value.trim();
     const category = document.getElementById('category').value.trim().toLowerCase();
-    let priority = parseInt(document.getElementById('priority').value, 10);
+    let priority = parseInt(document.getElementById('priority').value);
+    if (isNaN(priority) || priority < 1 || priority > 5) priority = 0;
 
     if (!name) {
-      alert("Bitte Produktnamen eingeben!");
+      alert("Produktname ist Pflicht!");
       return;
-    }
-    if (!imgUrl) {
-      alert("Bitte Bild-URL eingeben!");
-      return;
-    }
-    if (!price) {
-      alert("Bitte Preis eingeben!");
-      return;
-    }
-    if (!category) {
-      alert("Bitte Kategorie eingeben!");
-      return;
-    }
-    if (isNaN(priority) || priority < 1 || priority > 5) {
-      priority = 3; // Default Priorität 3, wenn ungültig
     }
 
     const productData = { imgUrl, name, price, link, category, priority };
 
     if (editingKey) {
-      db.ref('wishlist/' + editingKey).set(productData)
-        .then(() => {
-          showToast("Produkt gespeichert");
-          closeModal();
-        })
-        .catch(() => alert("Fehler beim Speichern"));
+      db.ref('wishlist/' + editingKey).update(productData).then(() => {
+        showToast("Produkt aktualisiert");
+        closeModal();
+        refreshProductList();
+      });
     } else {
-      db.ref('wishlist').push(productData)
-        .then(() => {
-          showToast("Produkt hinzugefügt");
-          closeModal();
-        })
-        .catch(() => alert("Fehler beim Hinzufügen"));
+      db.ref('wishlist').push(productData).then(() => {
+        showToast("Produkt hinzugefügt");
+        closeModal();
+        refreshProductList();
+      });
     }
   });
 
-  // Listen to category filter clicks
-  categoryFilter.addEventListener('click', e => {
+  // Category filter logic
+  categoryFilter.addEventListener('click', (e) => {
     if (e.target.tagName !== 'BUTTON') return;
-    const newCat = e.target.dataset.category;
-    if (!newCat) return;
+    const cat = e.target.getAttribute('data-category');
+    if (!cat) return;
+    selectedCategory = cat;
 
-    selectedCategory = newCat;
-    Array.from(categoryFilter.children).forEach(btn => btn.classList.remove('active'));
+    // Aktive Klasse setzen
+    [...categoryFilter.children].forEach(btn => btn.classList.remove('active'));
     e.target.classList.add('active');
+
     refreshProductList();
   });
 
-  // Share button - WhatsApp share link
-  shareBtn.addEventListener('click', () => {
-    const url = encodeURIComponent(location.href);
-    const text = encodeURIComponent("Schau dir Bengt's Wunschliste an: ");
-    const whatsappUrl = `https://wa.me/?text=${text}${url}`;
-    window.open(whatsappUrl, '_blank');
+  // Priorität-Sterne zum Setzen per Klick
+  document.body.addEventListener('click', (e) => {
+    if (!editMode) return;
+
+    if (e.target.closest('.priority-stars i')) {
+      const star = e.target;
+      const container = star.parentElement;
+      const card = container.closest('.card');
+      if (!card) return;
+      const productNameEl = card.querySelector('.card-content h3, .card-content a');
+      if (!productNameEl) return;
+
+      // Produktname und key ermitteln
+      const name = productNameEl.textContent.trim();
+      // Key ermitteln aus Datenbank (vereinfachte Annahme: Name ist eindeutig)
+      db.ref('wishlist').orderByChild('name').equalTo(name).once('value').then(snapshot => {
+        const val = snapshot.val();
+        if (!val) return;
+        const keys = Object.keys(val);
+        if (!keys.length) return;
+        const key = keys[0];
+
+        // Sterneindex ermitteln (1 bis 5)
+        const stars = Array.from(container.querySelectorAll('i'));
+        const index = stars.indexOf(star) + 1;
+
+        db.ref('wishlist/' + key + '/priority').set(index).then(() => {
+          showToast(`Priorität für "${name}" gesetzt auf ${index}`);
+          refreshProductList();
+        });
+      });
+    }
   });
 
-  // Refresh product list (fetch from DB and render)
+  // 3D Hover & Swipe Effekt auf Karten
+  function setup3DEffect() {
+    const cards = document.querySelectorAll('.card');
+
+    cards.forEach(card => {
+      let isTouching = false;
+
+      function updateTransform(x, y) {
+        const rect = card.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        const deltaX = x - centerX;
+        const deltaY = y - centerY;
+
+        // Neigung max +/-15 Grad
+        const rotateX = Math.min(Math.max(-deltaY / 20, -15), 15);
+        const rotateY = Math.min(Math.max(deltaX / 20, -15), 15);
+
+        card.style.transform = `perspective(600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+        card.style.transition = 'transform 0.1s ease';
+      }
+
+      function resetTransform() {
+        card.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg) scale(1)';
+        card.style.transition = 'transform 0.4s ease';
+      }
+
+      // Mouse Events
+      card.addEventListener('mousemove', e => {
+        updateTransform(e.clientX, e.clientY);
+      });
+      card.addEventListener('mouseleave', () => {
+        resetTransform();
+      });
+
+      // Touch Events
+      card.addEventListener('touchstart', e => {
+        isTouching = true;
+      });
+      card.addEventListener('touchmove', e => {
+        if (!isTouching) return;
+        const touch = e.touches[0];
+        updateTransform(touch.clientX, touch.clientY);
+      });
+      card.addEventListener('touchend', () => {
+        isTouching = false;
+        resetTransform();
+      });
+      card.addEventListener('touchcancel', () => {
+        isTouching = false;
+        resetTransform();
+      });
+    });
+  }
+
+  // Produktliste aus Firebase laden & anzeigen
   function refreshProductList() {
-    db.ref('wishlist').once('value').then(snapshot => {
-      const data = snapshot.val() || {};
-      const products = Object.entries(data).map(([key, val]) => ({ key, ...val }));
-
-      renderProducts(products);
-    });
-  }
-
-  // Render products filtered & sorted by category / priority
-  function renderProducts(products) {
     productList.innerHTML = '';
-
-    let filteredProducts;
-    if (selectedCategory === 'alle') {
-      filteredProducts = products;
-    } else if (selectedCategory === 'priorität') {
-      // Sortiere alle Produkte nach Priorität absteigend
-      filteredProducts = [...products].sort((a, b) => (b.priority || 0) - (a.priority || 0));
-    } else {
-      filteredProducts = products.filter(p => p.category === selectedCategory);
-    }
-
-    if (filteredProducts.length === 0) {
-      productList.innerHTML = `
-        <div class="empty-category" role="alert" aria-live="assertive">
-          <i class="fa-regular fa-face-sad-tear"></i><br />
-          Keine Produkte in dieser Kategorie.
-        </div>
-      `;
-      return;
-    }
-
-    filteredProducts.forEach(product => {
-      const card = document.createElement('article');
-      card.className = 'card';
-      card.setAttribute('tabindex', editMode ? '0' : '-1');
-      card.setAttribute('aria-label', `${product.name}, Preis: ${product.price}, Kategorie: ${product.category}`);
-
-      // Bild mit Link, falls vorhanden
-      let imgHTML = `<img src="${product.imgUrl}" alt="${product.name}" draggable="false" loading="lazy" />`;
-      if (product.link) {
-        imgHTML = `<a href="${product.link}" target="_blank" rel="noopener noreferrer" aria-label="Zum Shop von ${product.name}">${imgHTML}</a>`;
+    db.ref('wishlist').once('value').then(snapshot => {
+      const products = snapshot.val();
+      if (!products) {
+        productList.innerHTML = '<p class="empty-category"><i class="fas fa-box-open"></i><br>Keine Produkte vorhanden</p>';
+        return;
       }
 
-      card.innerHTML = `
-        ${imgHTML}
-        <div class="card-content">
-          <h3>${product.name}</h3>
-          <div class="price" tabindex="0" aria-label="Preis ${product.price}" role="textbox" contenteditable="${editMode}">${product.price}</div>
-          <div class="priority-stars" aria-label="Priorität ${product.priority || 0} von 5">
-            <span>Priorität:</span>
-            ${generateStars(product.priority || 0)}
-          </div>
-          ${editMode ? `<button class="delete-btn" aria-label="Produkt löschen">×</button>` : ''}
-        </div>
-      `;
+      let items = Object.keys(products).map(key => ({ key, ...products[key] }));
 
-      // Löschen Button nur im Edit-Modus
-      if (editMode) {
-        const delBtn = card.querySelector('.delete-btn');
-        delBtn.addEventListener('click', () => {
-          if (confirm(`Produkt "${product.name}" wirklich löschen?`)) {
-            db.ref('wishlist/' + product.key).remove().then(() => {
-              showToast("Produkt gelöscht");
-              refreshProductList();
-            });
-          }
-        });
-
-        // Preis direkt editierbar speichern
-        const priceDiv = card.querySelector('.price');
-        priceDiv.addEventListener('blur', () => {
-          const newPrice = priceDiv.textContent.trim();
-          if (newPrice.length === 0) {
-            priceDiv.textContent = product.price; // revert
-            return;
-          }
-          if (newPrice !== product.price) {
-            db.ref('wishlist/' + product.key + '/price').set(newPrice).then(() => {
-              showToast("Preis aktualisiert");
-              refreshProductList();
-            });
-          }
-        });
-
-        // Card click öffnet modal zum Editieren
-        card.addEventListener('click', e => {
-          if (e.target.classList.contains('delete-btn') || e.target.isContentEditable) return;
-          editingKey = product.key;
-          openModal();
-        });
-
+      if (selectedCategory === 'priorität') {
+        items = items.filter(i => i.priority >= 1);
+        items.sort((a,b) => b.priority - a.priority);
+      } else if (selectedCategory !== 'alle') {
+        items = items.filter(i => i.category.toLowerCase() === selectedCategory);
       }
 
-      productList.appendChild(card);
+      if (items.length === 0) {
+        productList.innerHTML = '<p class="empty-category"><i class="fas fa-folder-open"></i><br>Keine Produkte in dieser Kategorie</p>';
+        return;
+      }
+
+      items.forEach(product => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.setAttribute('tabindex', '0');
+
+        const img = document.createElement('img');
+        img.src = product.imgUrl || 'https://via.placeholder.com/400x200?text=Kein+Bild';
+        img.alt = product.name;
+        card.appendChild(img);
+
+        const content = document.createElement('div');
+        content.className = 'card-content';
+
+        if (product.link) {
+          const linkEl = document.createElement('a');
+          linkEl.href = product.link;
+          linkEl.target = '_blank';
+          linkEl.rel = 'noopener noreferrer';
+          linkEl.style.color = 'var(--accent-color)';
+          linkEl.style.textDecoration = 'none';
+          linkEl.innerHTML = `<h3>${product.name}</h3>`;
+          content.appendChild(linkEl);
+        } else {
+          const h3 = document.createElement('h3');
+          h3.textContent = product.name;
+          content.appendChild(h3);
+        }
+
+        const priceEl = document.createElement('div');
+        priceEl.className = 'price';
+        priceEl.textContent = product.price || '';
+        if (editMode) {
+          priceEl.setAttribute('contenteditable', 'true');
+          priceEl.setAttribute('aria-label', `Preis für ${product.name} bearbeiten`);
+          priceEl.addEventListener('blur', () => {
+            const newPrice = priceEl.textContent.trim();
+            db.ref('wishlist/' + product.key + '/price').set(newPrice);
+          });
+          priceEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              priceEl.blur();
+            }
+          });
+        }
+        content.appendChild(priceEl);
+
+        if (editMode) {
+          const delBtn = document.createElement('button');
+          delBtn.className = 'delete-btn';
+          delBtn.title = `Produkt "${product.name}" löschen`;
+          delBtn.innerHTML = '<i class="fas fa-trash"></i>';
+          delBtn.addEventListener('click', () => {
+            if (confirm(`Produkt "${product.name}" wirklich löschen?`)) {
+              db.ref('wishlist/' + product.key).remove().then(() => {
+                showToast('Produkt gelöscht');
+                refreshProductList();
+              });
+            }
+          });
+          content.appendChild(delBtn);
+
+          content.querySelector('h3, a').addEventListener('click', (e) => {
+            e.preventDefault();
+            editingKey = product.key;
+            openModal();
+          });
+        }
+
+        if (product.priority >= 1) {
+          const starsContainer = document.createElement('div');
+          starsContainer.className = 'priority-stars';
+          starsContainer.setAttribute('aria-label', `Priorität: ${product.priority} von 5`);
+          const labelSpan = document.createElement('span');
+          labelSpan.textContent = 'Priorität';
+          starsContainer.appendChild(labelSpan);
+
+          for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('i');
+            star.className = i <= product.priority ? 'fas fa-star filled' : 'far fa-star empty';
+            starsContainer.appendChild(star);
+          }
+          content.appendChild(starsContainer);
+        }
+
+        card.appendChild(content);
+        productList.appendChild(card);
+      });
+
+      // 3D-Effekt neu initialisieren
+      setup3DEffect();
     });
   }
 
-  // Sterne HTML generieren für Priorität
-  function generateStars(priority) {
-    let starsHTML = '';
-    for (let i = 1; i <= 5; i++) {
-      if (i <= priority) {
-        starsHTML += '<i class="fa-solid fa-star filled" aria-hidden="true"></i>';
-      } else {
-        starsHTML += '<i class="fa-regular fa-star empty" aria-hidden="true"></i>';
-      }
-    }
-    return starsHTML;
-  }
+  // WhatsApp teilen - öffnet Share-Dialog mit Link zur Seite
+  shareBtn.addEventListener('click', () => {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent('Schau dir meine Wunschliste an: ');
+    const waUrl = `https://wa.me/?text=${text}${url}`;
+    window.open(waUrl, '_blank');
+  });
 
-  // Initial laden
+  // Seite initial laden
   refreshProductList();
 
+  // Modal schließen beim Klick außerhalb des Inhalts
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  // Escape zum Schließen Modal
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal.style.display === 'flex') {
+      closeModal();
+    }
+  });
 </script>
 </body>
 </html>
