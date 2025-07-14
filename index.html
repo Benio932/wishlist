@@ -74,8 +74,40 @@
     color: #1f1f1f;
     box-shadow: 0 0 15px var(--accent-color);
   }
+
+  /* Kategorie Filter Styles */
+  #category-filter {
+    position: fixed;
+    top: 3.9rem;
+    width: 100%;
+    background: rgba(0,0,0,0.85);
+    padding: 0.5rem 1rem;
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    z-index: 1000;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.7);
+  }
+  #category-filter button {
+    flex-shrink: 0;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--accent-color);
+    background: transparent;
+    color: var(--accent-color);
+    transition: background 0.3s ease, color 0.3s ease;
+    user-select: none;
+  }
+  #category-filter button.active,
+  #category-filter button:hover {
+    background: var(--accent-color);
+    color: #1f1f1f;
+    box-shadow: 0 0 12px var(--accent-color);
+  }
+
   main {
-    margin-top: 5.5rem;
+    margin-top: 7.2rem; /* Header + Kategorie Filter Höhe */
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -153,6 +185,21 @@
     background: var(--accent-color);
     color: #000;
   }
+
+  /* Leere Kategorie Hinweis */
+  #empty-message {
+    text-align: center;
+    margin-top: 4rem;
+    color: var(--accent-color);
+    user-select: none;
+  }
+  #empty-message i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+    text-shadow: 0 0 12px var(--accent-color);
+  }
+
   /* Modal styles */
   .modal {
     display: none;
@@ -177,7 +224,8 @@
     from { opacity: 0; transform: scale(0.8); }
     to { opacity: 1; transform: scale(1); }
   }
-  .modal-content input {
+  .modal-content input,
+  .modal-content select {
     width: 100%;
     margin-bottom: 1rem;
     padding: 0.75rem;
@@ -246,7 +294,22 @@
     </div>
   </header>
 
+  <!-- Kategorie Filter -->
+  <div id="category-filter" role="tablist" aria-label="Produktkategorien">
+    <button data-category="" class="category-btn active" role="tab" aria-selected="true" tabindex="0">Alle</button>
+    <button data-category="mode/schmuck" class="category-btn" role="tab" aria-selected="false" tabindex="-1">Mode/Schmuck</button>
+    <button data-category="technik" class="category-btn" role="tab" aria-selected="false" tabindex="-1">Technik</button>
+    <button data-category="pflege" class="category-btn" role="tab" aria-selected="false" tabindex="-1">Pflege</button>
+    <button data-category="sport" class="category-btn" role="tab" aria-selected="false" tabindex="-1">Sport</button>
+    <button data-category="sonstiges" class="category-btn" role="tab" aria-selected="false" tabindex="-1">Sonstiges</button>
+  </div>
+
   <main id="product-list" aria-live="polite" aria-label="Wish list products"></main>
+
+  <div id="empty-message" style="display:none;" role="alert" aria-live="assertive" aria-atomic="true">
+    <i class="fas fa-box-open"></i>
+    <p>Hier sieht es leer aus.</p>
+  </div>
 
   <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-content">
@@ -255,6 +318,14 @@
       <input type="text" id="name" placeholder="Product Name" autocomplete="off" />
       <input type="text" id="price" placeholder="Price (e.g. €79.99)" autocomplete="off" />
       <input type="url" id="link" placeholder="Shop URL" autocomplete="off" />
+      <select id="category" aria-label="Kategorie auswählen">
+        <option value="">Kategorie wählen</option>
+        <option value="mode/schmuck">Mode/Schmuck</option>
+        <option value="technik">Technik</option>
+        <option value="pflege">Pflege</option>
+        <option value="sport">Sport</option>
+        <option value="sonstiges">Sonstiges</option>
+      </select>
       <div style="display:flex; justify-content:flex-end; gap: 1rem;">
         <button id="saveBtn">Save</button>
         <button id="cancelBtn" style="background:#444; color:#ddd;">Cancel</button>
@@ -290,10 +361,14 @@
   const cancelBtn = document.getElementById('cancelBtn');
   const toast = document.getElementById('toast');
   const shareBtn = document.getElementById('shareBtn');
+  const categoryFilter = document.getElementById('category-filter');
+  const emptyMessage = document.getElementById('empty-message');
+  const categorySelect = document.getElementById('category');
 
   // State
   let editMode = false;
   let editingKey = null; // key of product being edited
+  let currentCategory = '';
 
   // Show toast message
   function showToast(message) {
@@ -350,6 +425,7 @@
         document.getElementById('name').value = data.name || '';
         document.getElementById('price').value = data.price || '';
         document.getElementById('link').value = data.link || '';
+        categorySelect.value = data.category || '';
         saveBtn.textContent = "Speichern";
         document.getElementById('imgUrl').focus();
       });
@@ -372,6 +448,7 @@
     ['imgUrl','name','price','link'].forEach(id => {
       document.getElementById(id).value = '';
     });
+    categorySelect.value = '';
   }
 
   // Save product (add or update)
@@ -380,6 +457,7 @@
     const name = document.getElementById('name').value.trim();
     const price = document.getElementById('price').value.trim();
     const link = document.getElementById('link').value.trim();
+    const category = categorySelect.value;
 
     if (!imgUrl || !name || !link) {
       alert("Bitte Bild-URL, Produktname und Shop-URL ausfüllen.");
@@ -387,9 +465,9 @@
     }
 
     if (editingKey) {
-      db.ref('wishlist/' + editingKey).update({ imgUrl, name, price, link });
+      db.ref('wishlist/' + editingKey).update({ imgUrl, name, price, link, category });
     } else {
-      db.ref('wishlist').push({ imgUrl, name, price, link });
+      db.ref('wishlist').push({ imgUrl, name, price, link, category });
     }
 
     closeModal();
@@ -434,11 +512,26 @@
   function refreshProductList() {
     db.ref('wishlist').once('value').then(snapshot => {
       productList.innerHTML = '';
-      const data = snapshot.val();
-      if (!data) return;
+      emptyMessage.style.display = 'none';
 
-      Object.keys(data).forEach(key => {
-        const { imgUrl, name, price, link } = data[key];
+      const data = snapshot.val();
+      if (!data) {
+        showEmptyMessage();
+        return;
+      }
+
+      // Filter products by currentCategory (if set)
+      const filteredEntries = Object.entries(data).filter(([key, val]) => {
+        if (!currentCategory) return true; // Alle anzeigen
+        return val.category === currentCategory;
+      });
+
+      if (filteredEntries.length === 0) {
+        showEmptyMessage();
+        return;
+      }
+
+      for (const [key, { imgUrl, name, price, link }] of filteredEntries) {
         const card = document.createElement('div');
         card.className = 'card';
         card.setAttribute('tabindex', '0');
@@ -478,9 +571,33 @@
         });
 
         productList.appendChild(card);
-      });
+      }
     });
   }
+
+  function showEmptyMessage() {
+    emptyMessage.style.display = 'block';
+  }
+
+  // Kategorie Filter Buttons
+  categoryFilter.addEventListener('click', (e) => {
+    const btn = e.target.closest('button.category-btn');
+    if (!btn) return;
+
+    // Aktiviere nur die geklickte
+    [...categoryFilter.querySelectorAll('button.category-btn')].forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+      b.tabIndex = -1;
+    });
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+    btn.tabIndex = 0;
+
+    // Setze Kategorie
+    currentCategory = btn.dataset.category;
+    refreshProductList();
+  });
 
   // WhatsApp Share Button
   shareBtn.addEventListener('click', () => {
