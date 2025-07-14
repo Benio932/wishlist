@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -240,6 +240,9 @@
     <div class="button-container">
       <button id="editToggleBtn">Bearbeiten</button>
       <button id="addBtn" style="display:none;">Add</button>
+      <button id="shareBtn" title="Per WhatsApp teilen">
+        <i class="fab fa-whatsapp" style="font-size:1.3rem; color: var(--accent-color);"></i> Teilen
+      </button>
     </div>
   </header>
 
@@ -286,6 +289,7 @@
   const saveBtn = document.getElementById('saveBtn');
   const cancelBtn = document.getElementById('cancelBtn');
   const toast = document.getElementById('toast');
+  const shareBtn = document.getElementById('shareBtn');
 
   // State
   let editMode = false;
@@ -477,6 +481,14 @@
       });
     });
   }
+
+  // WhatsApp Share Button
+  shareBtn.addEventListener('click', () => {
+    const pageUrl = encodeURIComponent(window.location.href);
+    const shareText = encodeURIComponent("Schau dir meine Wunschliste an:");
+    const whatsappUrl = `https://wa.me/?text=${shareText}%20${pageUrl}`;
+    window.open(whatsappUrl, '_blank');
+  });
 
   // Initial load
   refreshProductList();
